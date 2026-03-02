@@ -35,9 +35,8 @@ export default function ProtectedRoute({ children, role }) {
 
   // Role-specific guard
   if (role && userRole !== role) {
-    // Admin accidentally on a user-only path → send to admin home
-    if (userRole === "admin") return <Navigate to="/admin" replace />;
-    // User accidentally on an admin path
+    if (userRole === "admin")    return <Navigate to="/admin" replace />;
+    if (userRole === "guardian") return <Navigate to="/guardian-dashboard" replace />;
     if (userRole === "user") {
       const profile = user?.selectedProfile;
       return <Navigate to={profile ? `/${profile}` : "/"} replace />;

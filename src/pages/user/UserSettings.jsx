@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
   User, Shield, Brain, Zap, BookOpen, Calculator, Hand, Wind, Sparkles,
-  Check, LogOut, Save,
+  Check, LogOut, Save, Heart, Eye, EyeOff,
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 
@@ -30,10 +30,13 @@ export default function UserSettings() {
   const [accessibility, setAccess]    = useState(
     user?.accessibility ?? { reduceMotion: false, screenReader: false },
   );
+  const [privacy, setPrivacy] = useState(
+    user?.privacy ?? { shareActivity: true, shareJournal: false, shareAlerts: true },
+  );
   const [saved, setSaved]             = useState(false);
 
   function handleSave() {
-    updateUser({ abhaId, selectedProfile, accessibility });
+    updateUser({ abhaId, selectedProfile, accessibility, privacy });
     setSaved(true);
     setTimeout(() => setSaved(false), 2200);
   }
@@ -190,6 +193,61 @@ export default function UserSettings() {
             </button>
             <div>
               <p className="text-sm font-medium">{label}</p>
+              <p className="text-xs text-muted-foreground">{desc}</p>
+            </div>
+          </div>
+        ))}
+      </section>
+
+      {/* Privacy — Guardian sharing */}
+      <section className="neuro-card p-6 space-y-4 border-l-4 border-l-violet-500">
+        <h2 className="font-semibold flex items-center gap-2">
+          <Heart className="w-4 h-4 text-violet-500" /> Guardian Privacy Controls
+        </h2>
+        <p className="text-xs text-muted-foreground">
+          Your guardian can only see the data you choose to share. Your private journal entries and anything you disable below will <strong>never</strong> be visible to them.
+        </p>
+
+        {[
+          {
+            key: "shareActivity",
+            label: "Share Daily Activity",
+            desc: "Lets your guardian see which modules you completed today.",
+            icon: Eye,
+          },
+          {
+            key: "shareAlerts",
+            label: "Share Safety Alerts",
+            desc: "Notifies your guardian when you trigger an SOS or meltdown mode.",
+            icon: Eye,
+          },
+          {
+            key: "shareJournal",
+            label: "Share Journal Notes",
+            desc: "Allows your guardian to read (and write into) the Shared Journal space.",
+            icon: Eye,
+          },
+        ].map(({ key, label, desc, icon: Icon }) => (
+          <div key={key} className="flex items-start gap-4">
+            <button
+              role="switch"
+              aria-checked={privacy[key]}
+              onClick={() => setPrivacy((p) => ({ ...p, [key]: !p[key] }))}
+              className={`relative flex-shrink-0 mt-0.5 w-11 h-6 rounded-full transition-colors ${
+                privacy[key] ? "bg-violet-500" : "bg-border"
+              }`}
+            >
+              <span
+                className={`absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white shadow transition-transform ${
+                  privacy[key] ? "translate-x-5" : "translate-x-0"
+                }`}
+              />
+            </button>
+            <div>
+              <p className="text-sm font-medium flex items-center gap-1.5">
+                <Icon className="w-3.5 h-3.5 text-muted-foreground" />
+                {label}
+              </p>
               <p className="text-xs text-muted-foreground">{desc}</p>
             </div>
           </div>

@@ -13,6 +13,7 @@ import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import UserSettings from "./pages/user/UserSettings";
+import GuardianDashboard from "./pages/guardian/GuardianDashboard";
 
 // ── ASD ──────────────────────────────────────
 import ASDPage from "./pages/ASDPage";
@@ -62,6 +63,9 @@ function ShellRoutes() {
       <Routes>
         {/* Admin-only */}
         <Route path="/admin" element={<ProtectedRoute role="admin"><AdminDashboard /></ProtectedRoute>} />
+
+        {/* Guardian-only */}
+        <Route path="/guardian-dashboard" element={<ProtectedRoute role="guardian"><GuardianDashboard /></ProtectedRoute>} />
 
         {/* User-only */}
         <Route path="/settings" element={<ProtectedRoute role="user"><UserSettings /></ProtectedRoute>} />

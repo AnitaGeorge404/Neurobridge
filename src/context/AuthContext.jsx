@@ -1,6 +1,16 @@
 import { createContext, useContext, useEffect, useState, useCallback } from "react";
 
 // ─────────────────────────────────────────────
+//  Care-Link ID → ward user lookup
+//  Each user has a unique careLinkId that a
+//  guardian enters during onboarding.
+// ─────────────────────────────────────────────
+export const CARE_LINK_REGISTRY = {
+  "CL-ARUN-0042": "nb-user-042",
+  "CL-MEERA-0011": "nb-user-011",
+};
+
+// ─────────────────────────────────────────────
 //  Mock user database
 // ─────────────────────────────────────────────
 const MOCK_USERS = {
@@ -18,11 +28,84 @@ const MOCK_USERS = {
     email: "arun@neurobridge.in",
     role: "user",
     abhaId: "14-2345-6789-0123",
-    selectedProfile: null,
+    careLinkId: "CL-ARUN-0042",
+    selectedProfile: "ocd",
+    privacy: {
+      shareActivity: true,
+      shareJournal: false,  // journal stays private by default
+      shareAlerts: true,
+    },
     accessibility: {
       reduceMotion: false,
       screenReader: false,
     },
+  },
+  // Second mock ward for the second linked child
+  "nb-user-011": {
+    id: "nb-user-011",
+    name: "Meera Pillai",
+    email: "meera@neurobridge.in",
+    role: "user",
+    abhaId: "22-9876-5432-1100",
+    careLinkId: "CL-MEERA-0011",
+    selectedProfile: "dyslexia",
+    privacy: {
+      shareActivity: true,
+      shareJournal: true,
+      shareAlerts: true,
+    },
+    accessibility: { reduceMotion: false, screenReader: true },
+  },
+  guardian: {
+    id: "nb-guardian-001",
+    name: "Suma Thomas",
+    email: "suma@neurobridge.in",
+    role: "guardian",
+    abhaId: "33-1122-3344-5566",
+    linkedWardIds: ["nb-user-042", "nb-user-011"],
+    relationship: "Parent",
+  },
+};
+
+// ─────────────────────────────────────────────
+//  Ward profiles (used by guardian dashboard)
+//  In production this would be a secure API call.
+// ─────────────────────────────────────────────
+export const MOCK_WARD_ACTIVITY = {
+  "nb-user-042": {
+    name: "Arun Kumar",
+    profile: "ocd",
+    today: [
+      { time: "08:14", event: "Completed a 10-min Mindfulness session", type: "positive" },
+      { time: "10:02", event: "Resisted 3 compulsions using Ritual Delayer", type: "positive" },
+      { time: "12:30", event: "Logged a thought trigger: contamination concern", type: "neutral" },
+      { time: "14:55", event: "ERP session: SUDS dropped from 72 → 34", type: "positive" },
+      { time: "16:10", event: "SOS Grounding triggered — high anxiety moment", type: "alert" },
+      { time: "18:00", event: "Completed 2 Response Prevention Goals", type: "positive" },
+    ],
+    alerts: [
+      { id: "a1", ts: "Today 16:10", level: "high",   message: "SOS Grounding activated. SUDS reported at 85.", resolved: false },
+      { id: "a2", ts: "Yesterday",   level: "medium", message: "Missed 2 scheduled ERP sessions.",             resolved: true },
+    ],
+    journalNotes: [
+      { id: "j1", from: "guardian", text: "So proud of you for your ERP session today! 🌟", ts: "Today 08:00", private: false },
+      { id: "j2", from: "ward",     text: "Felt really anxious at school but used the 4-7-8 breathing.", ts: "Today 13:00", private: false },
+    ],
+    weeklyStats: { erpSessions: 5, compulsionsResisted: 14, averageSuds: 48, streakDays: 4 },
+  },
+  "nb-user-011": {
+    name: "Meera Pillai",
+    profile: "dyslexia",
+    today: [
+      { time: "09:00", event: "Completed 3 Adaptive Reading modules", type: "positive" },
+      { time: "11:30", event: "Word Bank: 12 new words mastered", type: "positive" },
+      { time: "14:00", event: "Reader Mode session: 22 minutes", type: "positive" },
+    ],
+    alerts: [],
+    journalNotes: [
+      { id: "j3", from: "guardian", text: "Amazing reading session today, Meera!", ts: "Today 09:30", private: false },
+    ],
+    weeklyStats: { readingModules: 11, wordsMastered: 47, averageSession: 18, streakDays: 7 },
   },
 };
 
@@ -80,6 +163,52 @@ export function AuthProvider({ children }) {
     });
   }, []);
 
+  // ── Guardian: link a ward via Care-Link ID ──
+  // In production: POST /api/guardian/link-ward { careLinkId }
+  const linkWard = useCallback((careLinkId) => {
+    return new Promise((resolve, reject) => {
+      setTimeout(() => {
+        const wardId = CARE_LINK_REGISTRY[careLinkId.trim().toUpperCase()];
+        if (!wardId) {
+          reject(new Error("Care-Link ID not found. Please check and try again."));
+          return;
+        }
+        setUser((prev) => {
+          const updated = {
+            ...prev,
+            linkedWardIds: [...new Set([...(prev.linkedWardIds ?? []), wardId])],
+          };
+          localStorage.setItem("nb_auth", JSON.stringify(updated));
+          return updated;
+        });
+        resolve(wardId);
+      }, 700);
+    });
+  }, []);
+
+  // ── Guardian: post a journal note to a ward ─
+  const postGuardianNote = useCallback((wardId, text) => {
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        // In production this writes to backend; here we store in localStorage
+        const key = `nb_guardian_notes_${wardId}`;
+        const existing = (() => {
+          try { return JSON.parse(localStorage.getItem(key) || "[]"); }
+          catch { return []; }
+        })();
+        const note = {
+          id: `gn-${Date.now()}`,
+          from: "guardian",
+          text,
+          ts: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+          private: false,
+        };
+        localStorage.setItem(key, JSON.stringify([note, ...existing]));
+        resolve(note);
+      }, 400);
+    });
+  }, []);
+
   // ── logout ─────────────────────────────────
   const logout = useCallback(() => {
     localStorage.removeItem("nb_auth");
@@ -105,6 +234,8 @@ export function AuthProvider({ children }) {
     login,
     logout,
     updateUser,
+    linkWard,
+    postGuardianNote,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

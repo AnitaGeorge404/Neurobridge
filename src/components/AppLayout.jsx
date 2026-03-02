@@ -1,7 +1,7 @@
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import {
   Brain, Zap, BookOpen, Calculator, Shield, Hand, Ear, Sparkles,
-  Home, ArrowLeftRight, User, Settings, ShieldCheck, LogOut,
+  Home, ArrowLeftRight, User, Settings, ShieldCheck, LogOut, Heart,
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 
@@ -18,7 +18,11 @@ const USER_NAV = [
 ];
 
 const ADMIN_NAV = [
-  { title: "Dashboard",   path: "/admin",       icon: ShieldCheck },
+  { title: "Dashboard",   path: "/admin",              icon: ShieldCheck },
+];
+
+const GUARDIAN_NAV = [
+  { title: "Care-Circle", path: "/guardian-dashboard", icon: Heart },
 ];
 
 export default function AppLayout({ children }) {
@@ -26,7 +30,7 @@ export default function AppLayout({ children }) {
   const navigate = useNavigate();
   const { user, role, isAuthenticated, logout } = useAuth();
 
-  const navItems = role === "admin" ? ADMIN_NAV : USER_NAV;
+  const navItems = role === "admin" ? ADMIN_NAV : role === "guardian" ? GUARDIAN_NAV : USER_NAV;
 
   function handleLogout() {
     logout();
@@ -47,13 +51,13 @@ export default function AppLayout({ children }) {
         {/* User identity card */}
         {isAuthenticated && user ? (
           <Link
-            to={role === "admin" ? "/admin" : "/settings"}
+            to={role === "admin" ? "/admin" : role === "guardian" ? "/guardian-dashboard" : "/settings"}
             className="neuro-card p-3 mb-4 flex items-center gap-3 hover:bg-secondary transition-colors"
           >
             <div className="w-9 h-9 rounded-full bg-primary/15 flex items-center justify-center flex-shrink-0">
               {role === "admin"
-                ? <ShieldCheck className="w-4 h-4 text-amber-500" />
-                : <User className="w-4 h-4 text-primary" />}
+                ? <ShieldCheck className="w-4 h-4 text-amber-500" />                : role === "guardian"
+                ? <Heart className="w-4 h-4 text-violet-500" />                : <User className="w-4 h-4 text-primary" />}
             </div>
             <div className="flex-1 min-w-0">
               <p className="text-xs font-semibold truncate">{user.name}</p>
