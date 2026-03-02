@@ -60,6 +60,35 @@ This project is built with:
 - shadcn-ui
 - Tailwind CSS
 
+## OCD + Dyspraxia modules
+
+New accessibility-focused modules were added with CSS Modules (no Tailwind classes used in these new components):
+
+- `src/components/ocd/` for OCDModule features
+- `src/components/Dyspraxia/` for DyspraxiaModule features
+
+These are mounted at:
+
+- `/ocd`
+- `/dyspraxia`
+
+## Optional Python backend (Flask + SQLite)
+
+Frontend components use `/api/*` endpoints and gracefully fall back to `localStorage` if the backend is unavailable.
+
+Run backend locally:
+
+```sh
+cd backend
+python -m venv .venv
+# Windows PowerShell
+.\.venv\Scripts\Activate.ps1
+pip install -r requirements.txt
+python app.py
+```
+
+The Vite dev server proxies `/api` requests to `http://localhost:5000`.
+
 ## How can I deploy this project?
 
 Simply open [Lovable](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and click on Share -> Publish.
