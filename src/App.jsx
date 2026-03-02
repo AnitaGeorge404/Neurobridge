@@ -12,7 +12,7 @@ import EmotionCoach from "./pages/adhd/EmotionCoach";
 import VisualTimeline from "./pages/adhd/VisualTimeline";     
 import TaskBreakdown from "./pages/adhd/TaskBreakdown";
 import FocusSessions from "./pages/adhd/FocusSessions";
-import Soundscapes from "./pages/adhd/Soundscapes";
+import Soundscapes from "./pages/adhd/SoundScapes";
 import BodyDoubling from "./pages/adhd/BodyDoubling";
 import DyslexiaPage from "./pages/DyslexiaPage";
 import ReaderMode from "./pages/dyslexia/ReaderMode";
