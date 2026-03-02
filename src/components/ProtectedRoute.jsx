@@ -5,18 +5,20 @@ import { useAuth } from "@/context/AuthContext";
  * ProtectedRoute
  *
  * Usage:
- *   <ProtectedRoute>           — any authenticated user
- *   <ProtectedRoute role="admin"> — admin only
- *   <ProtectedRoute role="user">  — regular users only
+ *   <ProtectedRoute>                        — any authenticated user
+ *   <ProtectedRoute role="admin">           — admin only
+ *   <ProtectedRoute feature="ocd">          — feature must be enabled for user
+ *   <ProtectedRoute role="user" feature="ocd.erp-tracker">
  *
  * Redirect logic:
- *   - Not authenticated       → /login
- *   - Admin visiting /        → /admin
- *   - User visiting /admin    → /
- *   - Role mismatch           → their correct home
+ *   - Not authenticated                    → /login
+ *   - User with no disorders selected      → /onboarding/disorders (first-run)
+ *   - Admin visiting /                     → /admin
+ *   - Role mismatch                        → their correct home
+ *   - Feature not in user's enabled set    → / (safe fallback, no error screen)
  */
-export default function ProtectedRoute({ children, role }) {
-  const { isAuthenticated, isLoading, user, role: userRole } = useAuth();
+export default function ProtectedRoute({ children, role, feature }) {
+  const { isAuthenticated, isLoading, user, role: userRole, hasFeature } = useAuth();
   const location = useLocation();
 
   // Still hydrating from localStorage – render nothing to avoid flash
@@ -41,6 +43,22 @@ export default function ProtectedRoute({ children, role }) {
       const profile = user?.selectedProfile;
       return <Navigate to={profile ? `/${profile}` : "/"} replace />;
     }
+  }
+
+  // First-run onboarding: user has never selected disorders
+  if (
+    userRole === "user" &&
+    location.pathname !== "/onboarding/disorders" &&
+    (!user?.disorders || user.disorders.length === 0)
+  ) {
+    return <Navigate to="/onboarding/disorders" replace />;
+  }
+
+  // Feature gate: if a feature key is required and not enabled, redirect home
+  // Neutral redirect — no error message, never exposes what disorder the user
+  // lacks.  The UI never says "you don't have X disorder".
+  if (feature && !hasFeature(feature)) {
+    return <Navigate to="/" replace />;
   }
 
   return children;

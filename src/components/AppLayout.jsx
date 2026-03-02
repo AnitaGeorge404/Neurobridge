@@ -1,20 +1,23 @@
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import {
   Brain, Zap, BookOpen, Calculator, Shield, Hand, Ear, Sparkles,
-  Home, ArrowLeftRight, User, Settings, ShieldCheck, LogOut, Heart,
+  Home, ArrowLeftRight, User, Settings, ShieldCheck, LogOut, Heart, Wind,
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
+import { FEATURES } from "@/lib/featureRegistry";
 
+// featureKey: null means always visible (Home)
 const USER_NAV = [
-  { title: "Home",        path: "/",            icon: Home },
-  { title: "ASD",         path: "/asd",         icon: Brain },
-  { title: "ADHD",        path: "/adhd",        icon: Zap },
-  { title: "Dyslexia",    path: "/dyslexia",    icon: BookOpen },
-  { title: "Dyscalculia", path: "/dyscalculia", icon: Calculator },
-  { title: "OCD",         path: "/ocd",         icon: Shield },
-  { title: "Dyspraxia",   path: "/dyspraxia",   icon: Hand },
-  { title: "APD",         path: "/apd",         icon: Ear },
-  { title: "Tourette's",  path: "/tourettes",   icon: Sparkles },
+  { title: "Home",        path: "/",            icon: Home,       featureKey: null },
+  { title: "ASD",         path: "/asd",         icon: Brain,      featureKey: FEATURES.ASD },
+  { title: "ADHD",        path: "/adhd",        icon: Zap,        featureKey: FEATURES.ADHD },
+  { title: "Dyslexia",    path: "/dyslexia",    icon: BookOpen,   featureKey: FEATURES.DYSLEXIA },
+  { title: "Dyscalculia", path: "/dyscalculia", icon: Calculator, featureKey: FEATURES.DYSCALCULIA },
+  { title: "OCD",         path: "/ocd",         icon: Shield,     featureKey: FEATURES.OCD },
+  { title: "Dyspraxia",   path: "/dyspraxia",   icon: Hand,       featureKey: FEATURES.DYSPRAXIA },
+  { title: "APD",         path: "/apd",         icon: Ear,        featureKey: FEATURES.APD },
+  { title: "Anxiety",     path: "/anxiety",     icon: Wind,       featureKey: FEATURES.ANXIETY },
+  { title: "Tourette's",  path: "/tourettes",   icon: Sparkles,   featureKey: FEATURES.TOURETTES },
 ];
 
 const ADMIN_NAV = [
@@ -28,9 +31,16 @@ const GUARDIAN_NAV = [
 export default function AppLayout({ children }) {
   const location = useLocation();
   const navigate = useNavigate();
-  const { user, role, isAuthenticated, logout } = useAuth();
+  const { user, role, isAuthenticated, logout, hasFeature } = useAuth();
 
-  const navItems = role === "admin" ? ADMIN_NAV : role === "guardian" ? GUARDIAN_NAV : USER_NAV;
+  // For regular users: show Home always + any module they have enabled.
+  // Admins and guardians have fixed, role-specific navs.
+  const navItems =
+    role === "admin"
+      ? ADMIN_NAV
+      : role === "guardian"
+      ? GUARDIAN_NAV
+      : USER_NAV.filter((item) => item.featureKey === null || hasFeature(item.featureKey));
 
   function handleLogout() {
     logout();

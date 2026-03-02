@@ -3,9 +3,10 @@ import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
   User, Shield, Brain, Zap, BookOpen, Calculator, Hand, Wind, Sparkles,
-  Check, LogOut, Save, Heart, Eye, EyeOff,
+  Check, LogOut, Save, Heart, Eye, EyeOff, CheckCircle2, Ear, LayoutGrid,
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
+import { ALL_DISORDERS, DISORDER_META, toggleDisorder } from "@/lib/disorders";
 
 // ─────────────────────────────────────────────
 //  Neuro-category options (mirrors Index.jsx)
@@ -22,11 +23,14 @@ const PROFILES = [
 ];
 
 export default function UserSettings() {
-  const { user, updateUser, logout } = useAuth();
+  const { user, updateUser, updateDisorders, disorders: currentDisorders, logout } = useAuth();
   const navigate = useNavigate();
 
   const [abhaId, setAbhaId]           = useState(user?.abhaId ?? "");
   const [selectedProfile, setSelected] = useState(user?.selectedProfile ?? null);
+  const [planDisorders, setPlanDisorders] = useState(
+    () => new Set(currentDisorders ?? [])
+  );
   const [accessibility, setAccess]    = useState(
     user?.accessibility ?? { reduceMotion: false, screenReader: false },
   );
@@ -35,8 +39,17 @@ export default function UserSettings() {
   );
   const [saved, setSaved]             = useState(false);
 
-  function handleSave() {
+  function handlePlanToggle(disorder) {
+    setPlanDisorders((prev) => {
+      const next = new Set(prev);
+      next.has(disorder) ? next.delete(disorder) : next.add(disorder);
+      return next;
+    });
+  }
+
+  async function handleSave() {
     updateUser({ abhaId, selectedProfile, accessibility, privacy });
+    await updateDisorders([...planDisorders]);
     setSaved(true);
     setTimeout(() => setSaved(false), 2200);
   }
@@ -104,6 +117,56 @@ export default function UserSettings() {
           placeholder="e.g. 14-2345-6789-0123"
           className="w-full rounded-xl border border-border bg-background px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50"
         />
+      </section>
+
+      {/* My Plan — disorder multi-select (the feature gating source of truth) */}
+      <section className="neuro-card p-6 space-y-4">
+        <div>
+          <h2 className="font-semibold flex items-center gap-2">
+            <LayoutGrid className="w-4 h-4 text-primary" /> My Support Plan
+          </h2>
+          <p className="text-xs text-muted-foreground mt-1">
+            Select the areas you’d like support with. Only these tools will appear in your sidebar and home screen.
+            You can add or remove areas at any time.
+          </p>
+        </div>
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+          {ALL_DISORDERS.map((disorder) => {
+            const meta = DISORDER_META[disorder];
+            const Icon = meta.icon;
+            const isOn = planDisorders.has(disorder);
+            return (
+              <motion.button
+                key={disorder}
+                whileTap={{ scale: 0.97 }}
+                onClick={() => handlePlanToggle(disorder)}
+                className={`relative flex items-center gap-3 rounded-xl border-2 p-3 text-left transition-all ${
+                  isOn
+                    ? "border-primary bg-primary/5 shadow-sm"
+                    : "border-border hover:border-primary/30"
+                }`}
+              >
+                {isOn && (
+                  <motion.span initial={{ scale: 0 }} animate={{ scale: 1 }} className="absolute top-1.5 right-1.5">
+                    <CheckCircle2 className="w-3.5 h-3.5 text-primary" />
+                  </motion.span>
+                )}
+                <div className={`w-7 h-7 rounded-lg flex items-center justify-center ${meta.color} flex-shrink-0`}>
+                  <Icon className="w-3.5 h-3.5 text-white" />
+                </div>
+                <div className="min-w-0">
+                  <p className="text-xs font-semibold truncate">{meta.label}</p>
+                  <p className="text-[10px] text-muted-foreground leading-tight">{meta.subtitle}</p>
+                </div>
+              </motion.button>
+            );
+          })}
+        </div>
+        <p className="text-[10px] text-muted-foreground">
+          {planDisorders.size === 0
+            ? "⚠️ No areas selected — your home screen will be empty until you pick at least one."
+            : `${planDisorders.size} area${planDisorders.size > 1 ? "s" : ""} in your plan`}
+        </p>
       </section>
 
       {/* Neuro-profile selector */}

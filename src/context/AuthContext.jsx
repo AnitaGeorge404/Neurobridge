@@ -1,4 +1,6 @@
-import { createContext, useContext, useEffect, useState, useCallback } from "react";
+import { createContext, useContext, useEffect, useState, useCallback, useMemo } from "react";
+import { resolveEnabledFeatures } from "@/lib/featureRegistry";
+import { DISORDERS } from "@/lib/disorders";
 
 // ─────────────────────────────────────────────
 //  Care-Link ID → ward user lookup
@@ -30,6 +32,7 @@ const MOCK_USERS = {
     abhaId: "14-2345-6789-0123",
     careLinkId: "CL-ARUN-0042",
     selectedProfile: "ocd",
+    disorders: [DISORDERS.OCD],
     privacy: {
       shareActivity: true,
       shareJournal: false,  // journal stays private by default
@@ -49,6 +52,7 @@ const MOCK_USERS = {
     abhaId: "22-9876-5432-1100",
     careLinkId: "CL-MEERA-0011",
     selectedProfile: "dyslexia",
+    disorders: [DISORDERS.DYSLEXIA],
     privacy: {
       shareActivity: true,
       shareJournal: true,
@@ -118,6 +122,20 @@ export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isLoading, setIsLoading] = useState(true); // hydrating from storage
+
+  // Derive disorders and enabled features from the user object.
+  // disorders: user.disorders ?? [selectedProfile] for backward compat
+  const disorders = useMemo(() => {
+    if (!user) return [];
+    if (Array.isArray(user.disorders) && user.disorders.length > 0) return user.disorders;
+    if (user.selectedProfile) return [user.selectedProfile]; // legacy single-profile
+    return [];
+  }, [user]);
+
+  const enabledFeatures = useMemo(() => resolveEnabledFeatures(disorders), [disorders]);
+
+  /** Check whether a feature key is unlocked for the current user. */
+  const hasFeature = useCallback((featureKey) => enabledFeatures.has(featureKey), [enabledFeatures]);
 
   // Hydrate from localStorage on mount
   useEffect(() => {
@@ -226,11 +244,31 @@ export function AuthProvider({ children }) {
     });
   }, []);
 
+  // ── update selected disorders + recompute features
+  // Returns a Promise so callers can await it (e.g. onboarding page).
+  const updateDisorders = useCallback((newDisorders) => {
+    return new Promise((resolve) => {
+      setUser((prev) => {
+        const updated = { ...prev, disorders: newDisorders };
+        localStorage.setItem("nb_auth", JSON.stringify(updated));
+        localStorage.setItem(`nb_prefs_${prev.id}`, JSON.stringify({ disorders: newDisorders }));
+        resolve(updated);
+        return updated;
+      });
+    });
+  }, []);
+
   const value = {
     user,
     role: user?.role ?? null,
     isAuthenticated,
     isLoading,
+    // ── Disorder-aware feature system ──────────
+    disorders,
+    enabledFeatures,
+    hasFeature,
+    updateDisorders,
+    // ── Core auth ──────────────────────────────
     login,
     logout,
     updateUser,
