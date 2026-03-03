@@ -18,8 +18,8 @@ const PROFILES = [
   { id: "dyscalculia", label: "Dyscalculia",  subtitle: "Numbers & Math",     icon: Calculator, color: "bg-mode-dyscalculia" },
   { id: "ocd",         label: "OCD",          subtitle: "MindBridge",         icon: Shield,     color: "bg-mode-ocd" },
   { id: "dyspraxia",   label: "Dyspraxia",    subtitle: "CoordiMate",         icon: Hand,       color: "bg-mode-dyspraxia" },
-  { id: "anxiety",     label: "Anxiety",      subtitle: "CalmFlow Toolkit",   icon: Wind,       color: "bg-mode-ocd" },
-  { id: "tourettes",   label: "Tourette's",   subtitle: "Tic Management",     icon: Sparkles,   color: "bg-mode-tourettes" },
+  { id: "anxiety",     label: "Anxiety",      subtitle: "CalmFlow Toolkit",   icon: Wind,       color: "bg-mode-anxiety" },
+  { id: "depression",   label: "Depression",   subtitle: "Mental Health",     icon: Sparkles,   color: "bg-mode-depression" },
 ];
 
 export default function UserSettings() {

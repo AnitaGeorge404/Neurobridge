@@ -24,7 +24,7 @@ export const FEATURES = /** @type {const} */ ({
   DYSPRAXIA:    "dyspraxia",
   ASD:          "asd",
   ANXIETY:      "anxiety",
-  TOURETTES:    "tourettes",
+  DEPRESSION:    "depression",
   APD:          "apd",
 
   // ── OCD sub-features ────────────────────────
@@ -92,9 +92,9 @@ export const FEATURE_REGISTRY = {
     // Also unlocked for OCD users — anxiety management is clinically relevant
     // for ERP prep and generalised anxiety comorbidity.
   },
-  [FEATURES.TOURETTES]: {
-    label: "Tic Awareness",
-    disorders: [DISORDERS.TOURETTES],
+  [FEATURES.DEPRESSION]: {
+    label: "Depression Support",
+    disorders: [DISORDERS.DEPRESSION],
   },
   [FEATURES.APD]: {
     label: "Audio Support",
