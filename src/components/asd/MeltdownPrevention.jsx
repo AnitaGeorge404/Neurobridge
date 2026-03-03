@@ -23,9 +23,17 @@ export default function MeltdownPrevention({
       sensoryProfile?.crowd_threshold ?? 50,
     ].reduce((sum, value) => sum + value, 0) / 3;
 
-    let risk = 10;
-    risk += Math.min(40, incomplete * 5);
-    risk += thresholdLoad > 70 ? 25 : thresholdLoad > 60 ? 12 : 0;
+    const baselineRisk = Number(alertSettings?.baseline_risk ?? 10);
+    const taskRiskWeight = Number(alertSettings?.task_risk_weight ?? 5);
+    const taskRiskCap = Number(alertSettings?.task_risk_cap ?? 40);
+    const sensoryCautionThreshold = Number(alertSettings?.sensory_caution_threshold ?? 60);
+    const sensoryHighThreshold = Number(alertSettings?.sensory_high_threshold ?? 70);
+    const sensoryCautionBonus = Number(alertSettings?.sensory_caution_bonus ?? 12);
+    const sensoryHighBonus = Number(alertSettings?.sensory_high_bonus ?? 25);
+
+    let risk = baselineRisk;
+    risk += Math.min(taskRiskCap, incomplete * taskRiskWeight);
+    risk += thresholdLoad > sensoryHighThreshold ? sensoryHighBonus : thresholdLoad > sensoryCautionThreshold ? sensoryCautionBonus : 0;
 
     const configuredThreshold = alertSettings?.meltdown_risk_threshold ?? 65;
     const moderateCutoff = Math.max(25, configuredThreshold - 25);
@@ -56,6 +64,8 @@ export default function MeltdownPrevention({
           <Badge variant="outline" className="gap-1"><ShieldCheck size={14} /> Preventive Mode</Badge>
           <Badge variant="outline">Alert threshold: {alertSettings?.meltdown_risk_threshold ?? 65}</Badge>
           <Badge variant="outline">Alerts: {alertSettings?.alerts_enabled ? "On" : "Off"}</Badge>
+          <Badge variant="outline">Baseline risk: {alertSettings?.baseline_risk ?? 10}</Badge>
+          <Badge variant="outline">Task weight: {alertSettings?.task_risk_weight ?? 5}</Badge>
         </div>
 
         <div className="rounded-xl border p-3 bg-background/40 space-y-2">

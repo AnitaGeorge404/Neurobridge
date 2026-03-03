@@ -23,17 +23,41 @@ import SocialStoryBuilder from "./SocialStoryBuilder";
 import MeltdownPrevention from "./MeltdownPrevention";
 
 const ROLE_FALLBACK = "user";
+const ASD_PROFILE_STORAGE_PREFIX = "nb_asd_profile_";
 
-const LOCAL_DEFAULT_SCHEDULE = {
-  morning_start: "07:00",
-  sensory_break: "10:30",
-  evening_winddown: "18:30",
-};
+const getAsdProfileStorageKey = (userId) => `${ASD_PROFILE_STORAGE_PREFIX}${userId}`;
 
-const LOCAL_DEFAULT_ALERTS = {
-  alerts_enabled: true,
-  reminder_minutes: 45,
-  meltdown_risk_threshold: 65,
+const buildUserAsdDefaults = (user) => {
+  const disorders = Array.isArray(user?.disorders) ? user.disorders : [];
+  const hasAnxiety = disorders.includes("anxiety");
+  const primaryAsd = user?.selectedProfile === "asd";
+
+  return {
+    sensoryProfile: {
+      user_id: user?.id,
+      sound_threshold: hasAnxiety ? 52 : primaryAsd ? 58 : 62,
+      light_threshold: hasAnxiety ? 54 : primaryAsd ? 60 : 64,
+      crowd_threshold: hasAnxiety ? 45 : primaryAsd ? 50 : 55,
+      notes: hasAnxiety ? "ASD + Anxiety tuned profile" : "Local ASD profile",
+    },
+    scheduleSettings: {
+      morning_start: "07:00",
+      sensory_break: hasAnxiety ? "10:00" : "10:30",
+      evening_winddown: hasAnxiety ? "18:00" : "18:30",
+    },
+    alertSettings: {
+      alerts_enabled: true,
+      reminder_minutes: hasAnxiety ? 35 : 45,
+      meltdown_risk_threshold: hasAnxiety ? 58 : 65,
+      baseline_risk: hasAnxiety ? 16 : 10,
+      task_risk_weight: hasAnxiety ? 6 : 5,
+      task_risk_cap: hasAnxiety ? 45 : 40,
+      sensory_caution_threshold: hasAnxiety ? 58 : 60,
+      sensory_high_threshold: hasAnxiety ? 68 : 70,
+      sensory_caution_bonus: hasAnxiety ? 16 : 12,
+      sensory_high_bonus: hasAnxiety ? 30 : 25,
+    },
+  };
 };
 
 const createStep = (id, text, image_url = "") => ({ id, text, image_url });
@@ -153,8 +177,8 @@ export default function ASDModule() {
   const [sensoryProfile, setSensoryProfile] = useState(null);
   const [stories, setStories] = useState([]);
   const [meltdownLogs, setMeltdownLogs] = useState([]);
-  const [scheduleSettings, setScheduleSettings] = useState(LOCAL_DEFAULT_SCHEDULE);
-  const [alertSettings, setAlertSettings] = useState(LOCAL_DEFAULT_ALERTS);
+  const [scheduleSettings, setScheduleSettings] = useState({});
+  const [alertSettings, setAlertSettings] = useState({});
   const [taskNotifications, setTaskNotifications] = useState([]);
   const [guardianNotes, setGuardianNotes] = useState([]);
 
@@ -183,20 +207,29 @@ export default function ASDModule() {
     setRole(appRole || ROLE_FALLBACK);
 
     const builtInStories = getBuiltInStories(appUser.name);
+    const userDefaults = buildUserAsdDefaults(appUser);
+    const profileStorageKey = getAsdProfileStorageKey(appUser.id);
+    const persistedProfile = (() => {
+      try {
+        const raw = localStorage.getItem(profileStorageKey);
+        return raw ? JSON.parse(raw) : {};
+      } catch {
+        return {};
+      }
+    })();
+
+    const mergedSensoryProfile = { ...userDefaults.sensoryProfile, ...(persistedProfile.sensoryProfile || {}) };
+    const mergedScheduleSettings = { ...userDefaults.scheduleSettings, ...(persistedProfile.scheduleSettings || {}) };
+    const mergedAlertSettings = { ...userDefaults.alertSettings, ...(persistedProfile.alertSettings || {}) };
+
     const tasksByWard = loadWardTasks([appUser.id]);
     const wardTaskList = tasksByWard[appUser.id] || [];
     setRoutines(wardTaskList.map((task) => toAsdRoutineTask(task, appUser.id)));
-    setSensoryProfile({
-      user_id: appUser.id,
-      sound_threshold: 60,
-      light_threshold: 60,
-      crowd_threshold: 50,
-      notes: "Local ASD profile",
-    });
+    setSensoryProfile(mergedSensoryProfile);
     setStories(builtInStories);
     setMeltdownLogs([]);
-    setScheduleSettings(LOCAL_DEFAULT_SCHEDULE);
-    setAlertSettings(LOCAL_DEFAULT_ALERTS);
+    setScheduleSettings(mergedScheduleSettings);
+    setAlertSettings(mergedAlertSettings);
     setTaskNotifications(loadTaskNotifications(appUser.id));
     setGuardianNotes(
       loadWardNotes(appUser.id, MOCK_WARD_ACTIVITY[appUser.id]?.journalNotes || []).filter(
@@ -206,6 +239,22 @@ export default function ASDModule() {
 
     setLoading(false);
   }, [authLoading, isAuthenticated, appUser?.id, appUser?.name, appRole]);
+
+  useEffect(() => {
+    if (!currentUser?.id || !sensoryProfile) {
+      return;
+    }
+
+    const profileStorageKey = getAsdProfileStorageKey(currentUser.id);
+    localStorage.setItem(
+      profileStorageKey,
+      JSON.stringify({
+        sensoryProfile,
+        scheduleSettings,
+        alertSettings,
+      }),
+    );
+  }, [currentUser?.id, sensoryProfile, scheduleSettings, alertSettings]);
 
   useEffect(() => {
     if (!currentUser?.id) {

@@ -118,6 +118,106 @@ export default function RoutineVisualizer({
               <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
                 <Input
                   type="number"
+                  min={0}
+                  max={40}
+                  value={alertDraft.baseline_risk ?? 10}
+                  onChange={(event) =>
+                    setAlertDraft((prev) => ({
+                      ...prev,
+                      baseline_risk: Math.max(0, Math.min(40, Number(event.target.value) || 10)),
+                    }))
+                  }
+                  placeholder="Baseline risk"
+                />
+                <Input
+                  type="number"
+                  min={1}
+                  max={12}
+                  value={alertDraft.task_risk_weight ?? 5}
+                  onChange={(event) =>
+                    setAlertDraft((prev) => ({
+                      ...prev,
+                      task_risk_weight: Math.max(1, Math.min(12, Number(event.target.value) || 5)),
+                    }))
+                  }
+                  placeholder="Task risk weight"
+                />
+                <Input
+                  type="number"
+                  min={10}
+                  max={60}
+                  value={alertDraft.task_risk_cap ?? 40}
+                  onChange={(event) =>
+                    setAlertDraft((prev) => ({
+                      ...prev,
+                      task_risk_cap: Math.max(10, Math.min(60, Number(event.target.value) || 40)),
+                    }))
+                  }
+                  placeholder="Task risk cap"
+                />
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                <Input
+                  type="number"
+                  min={30}
+                  max={90}
+                  value={alertDraft.sensory_caution_threshold ?? 60}
+                  onChange={(event) =>
+                    setAlertDraft((prev) => ({
+                      ...prev,
+                      sensory_caution_threshold: Math.max(30, Math.min(90, Number(event.target.value) || 60)),
+                    }))
+                  }
+                  placeholder="Sensory caution threshold"
+                />
+                <Input
+                  type="number"
+                  min={40}
+                  max={100}
+                  value={alertDraft.sensory_high_threshold ?? 70}
+                  onChange={(event) =>
+                    setAlertDraft((prev) => ({
+                      ...prev,
+                      sensory_high_threshold: Math.max(40, Math.min(100, Number(event.target.value) || 70)),
+                    }))
+                  }
+                  placeholder="Sensory high threshold"
+                />
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                <Input
+                  type="number"
+                  min={0}
+                  max={40}
+                  value={alertDraft.sensory_caution_bonus ?? 12}
+                  onChange={(event) =>
+                    setAlertDraft((prev) => ({
+                      ...prev,
+                      sensory_caution_bonus: Math.max(0, Math.min(40, Number(event.target.value) || 12)),
+                    }))
+                  }
+                  placeholder="Caution bonus"
+                />
+                <Input
+                  type="number"
+                  min={0}
+                  max={50}
+                  value={alertDraft.sensory_high_bonus ?? 25}
+                  onChange={(event) =>
+                    setAlertDraft((prev) => ({
+                      ...prev,
+                      sensory_high_bonus: Math.max(0, Math.min(50, Number(event.target.value) || 25)),
+                    }))
+                  }
+                  placeholder="High bonus"
+                />
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
+                <Input
+                  type="number"
                   min={15}
                   max={240}
                   value={alertDraft.reminder_minutes ?? 45}
@@ -166,6 +266,13 @@ export default function RoutineVisualizer({
                       reminder_minutes: Number(alertDraft.reminder_minutes) || 45,
                       meltdown_risk_threshold: Number(alertDraft.meltdown_risk_threshold) || 65,
                       alerts_enabled: Boolean(alertDraft.alerts_enabled),
+                      baseline_risk: Number(alertDraft.baseline_risk) || 10,
+                      task_risk_weight: Number(alertDraft.task_risk_weight) || 5,
+                      task_risk_cap: Number(alertDraft.task_risk_cap) || 40,
+                      sensory_caution_threshold: Number(alertDraft.sensory_caution_threshold) || 60,
+                      sensory_high_threshold: Number(alertDraft.sensory_high_threshold) || 70,
+                      sensory_caution_bonus: Number(alertDraft.sensory_caution_bonus) || 12,
+                      sensory_high_bonus: Number(alertDraft.sensory_high_bonus) || 25,
                     },
                   })
                 }
@@ -184,6 +291,9 @@ export default function RoutineVisualizer({
             </p>
             <p className="text-sm text-muted-foreground">
               Alerts {alertSettings?.alerts_enabled ? "On" : "Off"} · Every {alertSettings?.reminder_minutes ?? 45} mins · Risk threshold {alertSettings?.meltdown_risk_threshold ?? 65}
+            </p>
+            <p className="text-sm text-muted-foreground">
+              Model baseline {alertSettings?.baseline_risk ?? 10} · task weight {alertSettings?.task_risk_weight ?? 5} · sensory high {alertSettings?.sensory_high_threshold ?? 70}
             </p>
           </div>
         )}
