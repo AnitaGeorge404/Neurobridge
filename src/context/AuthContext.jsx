@@ -2,6 +2,31 @@ import { createContext, useContext, useEffect, useState, useCallback, useMemo } 
 import { resolveEnabledFeatures } from "@/lib/featureRegistry";
 import { DISORDERS } from "@/lib/disorders";
 import { pushWardNote } from "@/lib/careSyncStore";
+import { supabase } from "@/lib/supabaseClient";
+
+// ─────────────────────────────────────────────
+//  Build a NeuroBridge profile from a Supabase
+//  auth user object (real sign-in path).
+//  Role + disorders are stored in user_metadata
+//  so clinicians can set them via the dashboard.
+// ─────────────────────────────────────────────
+function buildProfileFromSupabase(supabaseUser) {
+  const meta    = supabaseUser.user_metadata  ?? {};
+  const appMeta = supabaseUser.app_metadata   ?? {};
+  return {
+    id:              supabaseUser.id,
+    email:           supabaseUser.email,
+    name:            meta.name || meta.full_name || supabaseUser.email?.split("@")[0] || "User",
+    role:            appMeta.role    || meta.role    || "user",
+    abhaId:          meta.abhaId    ?? null,
+    selectedProfile: meta.selectedProfile ?? null,
+    disorders:       Array.isArray(meta.disorders) ? meta.disorders : [],
+    privacy:         meta.privacy         ?? { shareActivity: true, shareJournal: false, shareAlerts: true },
+    accessibility:   meta.accessibility   ?? { reduceMotion: false, screenReader: false },
+    linkedWardIds:   meta.linkedWardIds   ?? [],
+    _supabase: true,   // distinguishes real users from mock demo users
+  };
+}
 
 // ─────────────────────────────────────────────
 //  Care-Link ID → ward user lookup
@@ -222,25 +247,97 @@ export function AuthProvider({ children }) {
   /** Check whether a feature key is unlocked for the current user. */
   const hasFeature = useCallback((featureKey) => enabledFeatures.has(featureKey), [enabledFeatures]);
 
-  // Hydrate from localStorage on mount
+  // Hydrate: Supabase session takes priority; fall back to nb_auth (demo users)
   useEffect(() => {
-    try {
-      const stored = localStorage.getItem("nb_auth");
-      if (stored) {
-        const parsed = JSON.parse(stored);
-        setUser(parsed);
-        setIsAuthenticated(true);
+    let mounted = true;
+
+    // 1. Subscribe to Supabase session changes (real users)
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (_event, session) => {
+        if (!mounted) return;
+        if (session?.user) {
+          const profile = buildProfileFromSupabase(session.user);
+          // Merge any persisted prefs (disorders etc.) saved via updateDisorders
+          const persisted = (() => {
+            try { return JSON.parse(localStorage.getItem(`nb_prefs_${profile.id}`) || "{}"); }
+            catch { return {}; }
+          })();
+          const merged = { ...profile, ...persisted };
+          localStorage.setItem("nb_auth", JSON.stringify(merged));
+          setUser(merged);
+          setIsAuthenticated(true);
+        }
       }
-    } catch {
-      localStorage.removeItem("nb_auth");
-    } finally {
-      setIsLoading(false);
-    }
+    );
+
+    // 2. Check for existing Supabase session first, then nb_auth for demo users
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (!mounted) return;
+      if (session?.user) {
+        // Real user — handled by onAuthStateChange above; just release loading
+        setIsLoading(false);
+      } else {
+        // No Supabase session → try demo/mock nb_auth
+        try {
+          const stored = localStorage.getItem("nb_auth");
+          if (stored) {
+            const parsed = JSON.parse(stored);
+            setUser(parsed);
+            setIsAuthenticated(true);
+          }
+        } catch {
+          localStorage.removeItem("nb_auth");
+        } finally {
+          setIsLoading(false);
+        }
+      }
+    });
+
+    return () => {
+      mounted = false;
+      subscription.unsubscribe();
+    };
   }, []);
 
-  // ── mock login ─────────────────────────────
-  // Returns a Promise so the Login page can await it and show a spinner.
-  // Swap the setTimeout internals for a real fetch() when backend is ready.
+  // ── Real Supabase login (email + password) ─
+  // Used by the sign-in form.  Demo cards still use the mock login below.
+  const loginWithEmail = useCallback(async (email, password) => {
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+    if (error) throw new Error(error.message);
+    const profile = buildProfileFromSupabase(data.user);
+    const persisted = (() => {
+      try { return JSON.parse(localStorage.getItem(`nb_prefs_${profile.id}`) || "{}"); }
+      catch { return {}; }
+    })();
+    return { ...profile, ...persisted };
+  }, []);
+
+  // ── Real Supabase sign-up ───────────────────
+  // Stores name + role in user_metadata so buildProfileFromSupabase picks them up.
+  // Supabase sends a confirmation email; returns { needsConfirmation: true } when
+  // email confirmation is required, or the full profile when auto-confirm is on.
+  const signUpWithEmail = useCallback(async (email, password, name, role = "user") => {
+    const { data, error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        data: { name, role, disorders: [] },
+      },
+    });
+    if (error) throw new Error(error.message);
+    // identities array is empty when the email already exists
+    if (data.user && data.user.identities?.length === 0) {
+      throw new Error("An account with this email already exists. Please sign in.");
+    }
+    // If Supabase requires email confirmation, the session will be null
+    if (!data.session) {
+      return { needsConfirmation: true };
+    }
+    const profile = buildProfileFromSupabase(data.user);
+    return { ...profile, needsConfirmation: false };
+  }, []);
+
+  // ── mock login (demo cards only) ───────────
   const login = useCallback((role, options = {}) => {
     return new Promise((resolve, reject) => {
       setTimeout(() => {
@@ -308,7 +405,9 @@ export function AuthProvider({ children }) {
   }, []);
 
   // ── logout ─────────────────────────────────
-  const logout = useCallback(() => {
+  const logout = useCallback(async () => {
+    // Sign out from Supabase (no-op if not a real session)
+    await supabase.auth.signOut().catch(() => {});
     localStorage.removeItem("nb_auth");
     setUser(null);
     setIsAuthenticated(false);
@@ -320,18 +419,25 @@ export function AuthProvider({ children }) {
       const updated = { ...prev, ...patch };
       localStorage.setItem("nb_auth", JSON.stringify(updated));
       localStorage.setItem(`nb_prefs_${prev.id}`, JSON.stringify(patch));
+      // For real Supabase users, sync to user_metadata so it persists server-side
+      if (prev?._supabase) {
+        supabase.auth.updateUser({ data: patch }).catch(() => {});
+      }
       return updated;
     });
   }, []);
 
   // ── update selected disorders + recompute features
-  // Returns a Promise so callers can await it (e.g. onboarding page).
   const updateDisorders = useCallback((newDisorders) => {
     return new Promise((resolve) => {
       setUser((prev) => {
         const updated = { ...prev, disorders: newDisorders };
         localStorage.setItem("nb_auth", JSON.stringify(updated));
         localStorage.setItem(`nb_prefs_${prev.id}`, JSON.stringify({ disorders: newDisorders }));
+        // Sync to Supabase user_metadata for real users so it survives re-login
+        if (prev?._supabase) {
+          supabase.auth.updateUser({ data: { disorders: newDisorders } }).catch(() => {});
+        }
         resolve(updated);
         return updated;
       });
@@ -349,7 +455,9 @@ export function AuthProvider({ children }) {
     hasFeature,
     updateDisorders,
     // ── Core auth ──────────────────────────────
-    login,
+    login,           // mock demo cards
+    loginWithEmail,  // real Supabase sign-in form
+    signUpWithEmail, // real Supabase sign-up form
     logout,
     updateUser,
     linkWard,
