@@ -51,11 +51,11 @@ export default function Login() {
     return dest;
   }
 
-  async function handleDemoLogin(role) {
+  async function handleDemoLogin(role, options = {}) {
     setError("");
     setLoadingRole(role);
     try {
-      const user = await login(role);
+      const user = await login(role, options);
       navigate(getRedirectPath(user), { replace: true });
     } catch (e) {
       setError(e.message || "Login failed. Please try again.");
@@ -70,7 +70,7 @@ export default function Login() {
     let role = selectedRole;
     if (email.includes("admin")) role = "admin";
     else if (email.includes("guardian") || email.includes("suma")) role = "guardian";
-    await handleDemoLogin(role);
+    await handleDemoLogin(role, { email, careLinkId });
   }
 
   return (

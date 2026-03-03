@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useState, useCallback, useMemo } from "react";
 import { resolveEnabledFeatures } from "@/lib/featureRegistry";
 import { DISORDERS } from "@/lib/disorders";
+import { pushWardNote } from "@/lib/careSyncStore";
 
 // ─────────────────────────────────────────────
 //  Care-Link ID → ward user lookup
@@ -10,6 +11,7 @@ import { DISORDERS } from "@/lib/disorders";
 export const CARE_LINK_REGISTRY = {
   "CL-ARUN-0042": "nb-user-042",
   "CL-MEERA-0011": "nb-user-011",
+  "CL-RIYA-0088": "nb-user-088",
 };
 
 // ─────────────────────────────────────────────
@@ -60,6 +62,25 @@ const MOCK_USERS = {
     },
     accessibility: { reduceMotion: false, screenReader: true },
   },
+  user_asd_anxiety: {
+    id: "nb-user-088",
+    name: "Riya Sen",
+    email: "riya@neurobridge.in",
+    role: "user",
+    abhaId: "44-8080-9090-1010",
+    careLinkId: "CL-RIYA-0088",
+    selectedProfile: "anxiety",
+    disorders: [DISORDERS.ANXIETY, DISORDERS.ASD],
+    privacy: {
+      shareActivity: true,
+      shareJournal: true,
+      shareAlerts: true,
+    },
+    accessibility: {
+      reduceMotion: false,
+      screenReader: false,
+    },
+  },
   guardian: {
     id: "nb-guardian-001",
     name: "Suma Thomas",
@@ -67,6 +88,15 @@ const MOCK_USERS = {
     role: "guardian",
     abhaId: "33-1122-3344-5566",
     linkedWardIds: ["nb-user-042", "nb-user-011"],
+    relationship: "Parent",
+  },
+  guardian_asd_anxiety: {
+    id: "nb-guardian-088",
+    name: "Neha Sen",
+    email: "neha.guardian@neurobridge.in",
+    role: "guardian",
+    abhaId: "55-2222-3333-4444",
+    linkedWardIds: ["nb-user-088"],
     relationship: "Parent",
   },
 };
@@ -111,7 +141,50 @@ export const MOCK_WARD_ACTIVITY = {
     ],
     weeklyStats: { readingModules: 11, wordsMastered: 47, averageSession: 18, streakDays: 7 },
   },
+  "nb-user-088": {
+    name: "Riya Sen",
+    profile: "anxiety",
+    today: [
+      { time: "08:10", event: "Started ASD routine visual schedule", type: "positive" },
+      { time: "10:05", event: "Sensory break completed with calm breathing", type: "positive" },
+      { time: "13:20", event: "Anxiety trigger logged: loud classroom noise", type: "neutral" },
+      { time: "16:00", event: "Panic mode activated and resolved in 5 minutes", type: "alert" },
+      { time: "18:30", event: "Completed social story flashcards", type: "positive" },
+    ],
+    alerts: [
+      { id: "a88-1", ts: "Today 16:00", level: "medium", message: "Panic mode triggered from Anxiety toolkit.", resolved: false },
+    ],
+    journalNotes: [
+      { id: "j88-1", from: "ward", text: "Noise felt too much, but breathing helped me calm down.", ts: "Today 16:20", private: false },
+    ],
+    weeklyStats: { calmingSessions: 9, sensoryBreaks: 12, averageAnxiety: 42, streakDays: 5 },
+  },
 };
+
+function resolveMockAccountKey(role, options = {}) {
+  const email = String(options.email || "").toLowerCase();
+  const careLinkId = String(options.careLinkId || "").toUpperCase();
+
+  if (role === "user") {
+    if (email.includes("riya") || email.includes("anxiety") || email.includes("asd")) {
+      return "user_asd_anxiety";
+    }
+    return "user";
+  }
+
+  if (role === "guardian") {
+    if (
+      email.includes("neha") ||
+      email.includes("riya") ||
+      careLinkId === "CL-RIYA-0088"
+    ) {
+      return "guardian_asd_anxiety";
+    }
+    return "guardian";
+  }
+
+  return role;
+}
 
 // ─────────────────────────────────────────────
 //  Context
@@ -156,10 +229,11 @@ export function AuthProvider({ children }) {
   // ── mock login ─────────────────────────────
   // Returns a Promise so the Login page can await it and show a spinner.
   // Swap the setTimeout internals for a real fetch() when backend is ready.
-  const login = useCallback((role) => {
+  const login = useCallback((role, options = {}) => {
     return new Promise((resolve, reject) => {
       setTimeout(() => {
-        const mockUser = MOCK_USERS[role];
+        const accountKey = resolveMockAccountKey(role, options);
+        const mockUser = MOCK_USERS[accountKey];
         if (!mockUser) {
           reject(new Error("Invalid role"));
           return;
@@ -208,12 +282,6 @@ export function AuthProvider({ children }) {
   const postGuardianNote = useCallback((wardId, text) => {
     return new Promise((resolve) => {
       setTimeout(() => {
-        // In production this writes to backend; here we store in localStorage
-        const key = `nb_guardian_notes_${wardId}`;
-        const existing = (() => {
-          try { return JSON.parse(localStorage.getItem(key) || "[]"); }
-          catch { return []; }
-        })();
         const note = {
           id: `gn-${Date.now()}`,
           from: "guardian",
@@ -221,7 +289,7 @@ export function AuthProvider({ children }) {
           ts: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
           private: false,
         };
-        localStorage.setItem(key, JSON.stringify([note, ...existing]));
+        pushWardNote(wardId, { from: "guardian", text, isPrivate: false });
         resolve(note);
       }, 400);
     });
