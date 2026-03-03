@@ -12,8 +12,58 @@
 
 import { useState, useCallback, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Trophy, Target, Clock, RotateCcw, Plus, Flame, CheckCircle, Sparkles, ChevronDown, ChevronUp } from "lucide-react";
+import { Trophy, Target, Clock, RotateCcw, Plus, Flame, CheckCircle, Sparkles, ChevronDown, ChevronUp, RefreshCw, Zap } from "lucide-react";
 import { getGoals, updateGoal, addGoal, suggestGoals } from "@/lib/ocdStore";
+
+// ─── Divert-While-Waiting activities ──────────────────────────────────────────
+// Purposeful, non-OCD-related micro-tasks. Clinically: engaging working memory
+// during the delay window reduces compulsion strength without reassurance.
+const DIVERT_ACTIVITIES = [
+  { icon: "🌬️", text: "Take 5 slow breaths — in for 4, hold for 2, out for 6." },
+  { icon: "👁️", text: "Name 5 things you can see right now, out loud or in your head." },
+  { icon: "🤲", text: "Feel the texture of something near you. Describe it in detail." },
+  { icon: "🎵", text: "Hum or sing the first song that pops into your head." },
+  { icon: "🔢", text: "Count backwards from 100 in threes: 100, 97, 94…" },
+  { icon: "🌡️", text: "Notice any sounds around you. List them from quietest to loudest." },
+  { icon: "📝", text: "Think of three things that went okay today, however small." },
+  { icon: "💪", text: "Squeeze your hands into fists for 5 seconds, then release. Repeat 3×." },
+  { icon: "🧊", text: "Get a glass of cold water and take three slow sips." },
+  { icon: "👣", text: "Feel both feet flat on the floor. Notice the weight. Press gently." },
+  { icon: "🌿", text: "Think of somewhere calming you have been. Recall one detail." },
+  { icon: "🎨", text: "Mentally redecorate one room in your home however you want." },
+];
+
+function StayBusyCard({ elapsed, totalSec }) {
+  // Pick a new activity every 40s so it feels intentional, not distracting
+  const idx = Math.floor(elapsed / 40) % DIVERT_ACTIVITIES.length;
+  const activity = DIVERT_ACTIVITIES[idx];
+  const nextIn = 40 - (elapsed % 40);
+
+  return (
+    <AnimatePresence mode="wait">
+      <motion.div
+        key={idx}
+        initial={{ opacity: 0, y: 6 }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0, y: -6 }}
+        transition={{ duration: 0.35 }}
+        className="rounded-lg border border-indigo-200 bg-indigo-50 px-4 py-3 space-y-1.5"
+      >
+        <div className="flex items-center gap-2">
+          <Zap size={12} className="text-indigo-500 shrink-0" />
+          <span className="text-[10px] font-semibold uppercase tracking-widest text-indigo-500">
+            Stay engaged while you wait
+          </span>
+          <span className="ml-auto text-[10px] text-indigo-300">next in {nextIn}s</span>
+        </div>
+        <p className="text-sm text-indigo-900 leading-snug">
+          <span className="text-base mr-1.5">{activity.icon}</span>
+          {activity.text}
+        </p>
+      </motion.div>
+    </AnimatePresence>
+  );
+}
 
 const BADGE_TIERS = [
   { min: 1,  label: "Starting",  color: "text-gray-500",   bg: "bg-gray-50 border-gray-300" },
@@ -125,14 +175,17 @@ function GoalCard({ goal, onSuccess, onReset, onEscalate }) {
       )}
 
       {timerActive && (
-        <div className="flex items-center gap-4">
-          <TimerRing elapsed={elapsed} total={durationSec} />
-          <div>
-            <p className="text-2xl font-mono font-bold text-white tabular-nums">
-              {String(Math.floor((durationSec - elapsed) / 60)).padStart(2,"0")}:{String((durationSec - elapsed) % 60).padStart(2,"0")}
-            </p>
-            <p className="text-xs text-teal-700 mt-0.5">Stay with the discomfort. Uncertainty is tolerable.</p>
+        <div className="space-y-3">
+          <div className="flex items-center gap-4">
+            <TimerRing elapsed={elapsed} total={durationSec} />
+            <div>
+              <p className="text-2xl font-mono font-bold text-white tabular-nums">
+                {String(Math.floor((durationSec - elapsed) / 60)).padStart(2,"0")}:{String((durationSec - elapsed) % 60).padStart(2,"0")}
+              </p>
+              <p className="text-xs text-teal-700 mt-0.5">Stay with the discomfort. Uncertainty is tolerable.</p>
+            </div>
           </div>
+          <StayBusyCard elapsed={elapsed} totalSec={durationSec} />
         </div>
       )}
 

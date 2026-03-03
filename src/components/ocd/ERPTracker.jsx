@@ -8,6 +8,96 @@ const PRE_COLOR  = "#f97316";
 const POST_COLOR = "#0d9488";
 const CHART_TIP  = { background: "#fff", border: "1px solid #e2e8f0", borderRadius: 8, color: "#1e293b" };
 
+// Micro-grounding prompts shown during active exposure.
+// These keep the user present and engaged WITHOUT providing reassurance.
+const GROUNDING_PROMPTS = [
+  "Notice 3 things you can see right now.",
+  "Feel both feet flat on the floor.",
+  "What's the loudest sound in the room?",
+  "The urge is just a feeling. A feeling cannot harm you.",
+  "Breathe out slowly — longer than your inhale.",
+  "Notice where tension lives in your body. Don't change it, just observe.",
+  "This discomfort is temporary. The urge will peak and fall.",
+  "Name one texture you can feel right now.",
+  "You are doing something remarkable — staying when every instinct says leave.",
+  "The anxiety is not information about danger. It is your nervous system learning.",
+];
+
+// ─── Urge Wave Visual ─────────────────────────────────────────────────────────
+// An SVG arc that shows where in the habituation curve the person currently is.
+// Clinically: visualising the wave rising and falling helps the person trust they
+// don't need to escape — the discomfort will peak and subside on its own.
+function UrgeWave({ elapsed, totalSec }) {
+  const pct = totalSec > 0 ? Math.min(elapsed / totalSec, 1) : 0;
+  const W = 260, H = 60;
+  // Bell-curve-ish y position: peaks at ~40% of the session
+  const peak = 0.4;
+  const bell = (t) => {
+    const d = t - peak;
+    return Math.exp(-(d * d) / (2 * 0.06));
+  };
+  const markerX = pct * W;
+  const markerY = H - bell(pct) * (H - 8) - 4;
+
+  // Build a smooth SVG path for the wave
+  const points = Array.from({ length: 52 }, (_, i) => {
+    const t = i / 51;
+    return `${(t * W).toFixed(1)},${(H - bell(t) * (H - 8)).toFixed(1)}`;
+  }).join(" ");
+
+  const label = pct < 0.35 ? "Rising…" : pct < 0.55 ? "Near peak — stay" : pct < 0.85 ? "Falling ↓" : "Almost there";
+  const labelColor = pct < 0.35 ? "#f97316" : pct < 0.55 ? "#dc2626" : pct < 0.85 ? "#0d9488" : "#059669";
+
+  return (
+    <div className="space-y-1">
+      <div className="flex items-center justify-between text-[10px] text-gray-400 px-0.5">
+        <span>Urge wave</span>
+        <span style={{ color: labelColor }} className="font-semibold">{label}</span>
+      </div>
+      <svg width={W} height={H + 4} className="w-full" viewBox={`0 0 ${W} ${H + 4}`}>
+        {/* filled area under curve */}
+        <path
+          d={`M 0 ${H} ${points} ${W} ${H} Z`}
+          fill="url(#wave-grad)"
+          opacity={0.18}
+        />
+        <defs>
+          <linearGradient id="wave-grad" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor="#0d9488" />
+            <stop offset="100%" stopColor="#0d9488" stopOpacity="0" />
+          </linearGradient>
+        </defs>
+        {/* curve line */}
+        <polyline points={points} fill="none" stroke="#0d9488" strokeWidth={2} strokeLinejoin="round" opacity={0.7} />
+        {/* marker dot */}
+        <circle cx={markerX} cy={markerY} r={5} fill={labelColor} />
+        {/* baseline labels */}
+        <text x={2} y={H + 3} fontSize={8} fill="#94a3b8">Start</text>
+        <text x={W - 22} y={H + 3} fontSize={8} fill="#94a3b8">End</text>
+      </svg>
+    </div>
+  );
+}
+
+// ─── Micro-grounding prompt (shown during exposure, rotates every 35s) ────────
+function GroundingMicroPrompt({ elapsed }) {
+  const idx = Math.floor(elapsed / 35) % GROUNDING_PROMPTS.length;
+  return (
+    <AnimatePresence mode="wait">
+      <motion.p
+        key={idx}
+        initial={{ opacity: 0, y: 4 }}
+        animate={{ opacity: 0.9, y: 0 }}
+        exit={{ opacity: 0, y: -4 }}
+        transition={{ duration: 0.4 }}
+        className="text-center text-xs text-gray-500 italic px-2"
+      >
+        {GROUNDING_PROMPTS[idx]}
+      </motion.p>
+    </AnimatePresence>
+  );
+}
+
 function SudsSlider({ value, onChange, label }) {
   const color = value < 30 ? "#16a34a" : value < 60 ? "#d97706" : value < 80 ? "#f97316" : "#dc2626";
   return (
@@ -162,6 +252,8 @@ export default function ERPTracker({ onSessionLogged }) {
                   <p className="text-5xl font-mono font-bold text-gray-900 tabular-nums">{fmt(Math.max(activeItem.durationMin * 60 - elapsed, 0))}</p>
                   <p className="text-xs text-gray-400 mt-1">remaining</p>
                 </div>
+                <UrgeWave elapsed={elapsed} totalSec={activeItem.durationMin * 60} />
+                <GroundingMicroPrompt elapsed={elapsed} />
                 <CoachingBanner message={coaching} />
                 <div className="flex gap-3">
                   <button onClick={() => setIsPaused((p) => !p)}
