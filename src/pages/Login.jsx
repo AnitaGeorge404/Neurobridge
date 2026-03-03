@@ -49,6 +49,22 @@ export default function Login() {
 
   const from = location.state?.from?.pathname;
   const roleConfig = ROLES.find((r) => r.id === selectedRole);
+  function inferDemoAccountByEmail(rawEmail, rawCareLinkId) {
+    const normalizedEmail = String(rawEmail || "").toLowerCase().trim();
+    const normalizedCareLink = String(rawCareLinkId || "").toUpperCase().trim();
+
+    if (normalizedEmail === "riya@neurobridge.in" || normalizedEmail.includes("riya")) {
+      return { role: "user", accountKey: "user_asd_anxiety" };
+    }
+    if (
+      normalizedEmail === "neha.guardian@neurobridge.in" ||
+      normalizedEmail.includes("neha") ||
+      normalizedCareLink === "CL-RIYA-0088"
+    ) {
+      return { role: "guardian", accountKey: "guardian_asd_anxiety" };
+    }
+    return null;
+  }
 
   function switchMode(next) {
     setMode(next);
@@ -115,6 +131,22 @@ export default function Login() {
         const user = await loginWithEmail(email.trim(), password);
         navigate(getRedirectPath(user), { replace: true });
       } catch (e) {
+        const mappedDemo = inferDemoAccountByEmail(email, careLinkId);
+        if (mappedDemo) {
+          try {
+            const demoUser = await login(mappedDemo.role, {
+              email,
+              careLinkId,
+              accountKey: mappedDemo.accountKey,
+            });
+            navigate(getRedirectPath(demoUser), { replace: true });
+            return;
+          } catch {
+            setError("Sign in failed. Demo fallback could not be loaded.");
+            return;
+          }
+        }
+
         setError(e.message || "Sign in failed. Check your email and password.");
       } finally {
         setLoadingRole(null);

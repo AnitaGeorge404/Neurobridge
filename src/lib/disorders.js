@@ -23,7 +23,7 @@ export const DISORDERS = /** @type {const} */ ({
   DYSPRAXIA:   "dyspraxia",
   ASD:         "asd",
   ANXIETY:     "anxiety",
-  TOURETTES:   "tourettes",
+  DEPRESSION:   "depression",
   APD:         "apd",
 });
 
@@ -94,14 +94,14 @@ export const DISORDER_META = {
     accent:      "text-rose-600",
     path:        "/dyscalculia",
   },
-  [DISORDERS.TOURETTES]: {
-    label:       "Tourette's",
-    subtitle:    "Tic Disorders",
-    description: "Tic tracking, habit-reversal prompts, and awareness tools.",
+  [DISORDERS.DEPRESSION]: {
+    label:       "Depression",
+    subtitle:    "Mental Health",
+    description: "Mood tracking, thought journaling, and coping strategies.",
     icon:        Sparkles,
-    color:       "bg-mode-tourettes",
+    color:       "bg-mode-depression",
     accent:      "text-fuchsia-600",
-    path:        "/tourettes",
+    path:        "/depression",
   },
   [DISORDERS.APD]: {
     label:       "APD",

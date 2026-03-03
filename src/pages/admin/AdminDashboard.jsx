@@ -21,7 +21,7 @@ const MOCK_USERS = [
   { id: "nb-005", name: "Vishnu Nambiar",  email: "vish@nb.in",   abhaStatus: "pending",   profile: "ASD",         lastActive: "1 hr ago",   ashaWorker: false },
   { id: "nb-006", name: "Lakshmi Iyer",    email: "laksh@nb.in",  abhaStatus: "verified",  profile: "Anxiety",     lastActive: "30 min ago", ashaWorker: false },
   { id: "nb-007", name: "Kiran Das",       email: "kiran@nb.in",  abhaStatus: "unverified",profile: "Dyscalculia", lastActive: "2 days ago", ashaWorker: false },
-  { id: "nb-008", name: "Sindhu Gopalan",  email: "sindhu@nb.in", abhaStatus: "verified",  profile: "Tourette's",  lastActive: "4 hrs ago",  ashaWorker: false },
+  { id: "nb-008", name: "Sindhu Gopalan",  email: "sindhu@nb.in", abhaStatus: "verified",  profile: "Depression",  lastActive: "4 hrs ago",  ashaWorker: false },
 ];
 
 const ASHA_WORKERS = [
@@ -39,7 +39,7 @@ const CHART_DATA = [
   { name: "OCD",         users: 54, fill: "#8b5cf6" },
   { name: "Dyspraxia",   users: 38, fill: "#06b6d4" },
   { name: "Anxiety",     users: 72, fill: "#f97316" },
-  { name: "Tourette's",  users: 18, fill: "#84cc16" },
+  { name: "Depression",  users: 18, fill: "#84cc16" },
 ];
 
 const STATUS_BADGE = {
