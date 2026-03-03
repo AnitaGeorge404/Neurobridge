@@ -12,7 +12,7 @@ const ALL_MODES = [
   { featureKey: FEATURES.OCD,         title: "OCD",         subtitle: "MindBridge",           icon: Shield,     color: "bg-mode-ocd",         path: "/ocd" },
   { featureKey: FEATURES.DYSPRAXIA,   title: "Dyspraxia",   subtitle: "CoordiMate",           icon: Hand,       color: "bg-mode-dyspraxia",   path: "/dyspraxia" },
   { featureKey: FEATURES.ANXIETY,     title: "Anxiety",     subtitle: "CalmFlow Toolkit",     icon: Wind,       color: "bg-mode-anxiety",     path: "/anxiety" },
-  { featureKey: FEATURES.TOURETTES,   title: "Tourette's",  subtitle: "Tic Management",       icon: Sparkles,   color: "bg-mode-tourettes",   path: "/tourettes" },
+  { featureKey: FEATURES.DEPRESSION,   title: "Depression",  subtitle: "Mental Health",        icon: Sparkles,   color: "bg-mode-depression",   path: "/depression" },
   { featureKey: FEATURES.APD,         title: "APD",         subtitle: "Auditory Processing",  icon: Ear,        color: "bg-mode-apd",         path: "/apd" },
 ];
 
