@@ -8,10 +8,8 @@ import { FEATURES } from "@/lib/featureRegistry";
 import AppLayout from "@/components/AppLayout";
 import ProtectedRoute from "@/components/ProtectedRoute";
 
-// ── Onboarding ─────────────────────────────
 import DisorderSelection from "./pages/onboarding/DisorderSelection";
 
-// ── Pages ───────────────────────────────────
 import Login from "./pages/Login";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
@@ -19,10 +17,8 @@ import AdminDashboard from "./pages/admin/AdminDashboard";
 import UserSettings from "./pages/user/UserSettings";
 import GuardianDashboard from "./pages/guardian/GuardianDashboard";
 
-// ── ASD ─────────────────────────────────────
 import ASDPage from "./pages/ASDPage";
 
-// ── ADHD ────────────────────────────────────
 import ADHDDashboard from "./pages/adhd/ADHDDashboard";
 import EmotionCoach from "./pages/adhd/EmotionCoach";
 import VisualTimeline from "./pages/adhd/VisualTimeline";
@@ -31,7 +27,6 @@ import FocusSessions from "./pages/adhd/FocusSessions";
 import Soundscapes from "./pages/adhd/SoundScapes";
 import BodyDoubling from "./pages/adhd/BodyDoubling";
 
-// ── Dyslexia ────────────────────────────────
 import DyslexiaPage from "./pages/DyslexiaPage";
 import AdaptiveReadingIntelligence from "./pages/dyslexia/AdaptiveReadingIntelligence";
 import PhonologicalTrainingGenerator from "./pages/dyslexia/PhonologicalTrainingGenerator";
@@ -39,7 +34,6 @@ import MultiSensoryReinforcementMode from "./pages/dyslexia/MultiSensoryReinforc
 import DyslexiaWritingAssistant from "./pages/dyslexia/DyslexiaWritingAssistant";
 import AIPersonalLearningProfile from "./pages/dyslexia/AIPersonalLearningProfile";
 
-// ── Dyscalculia ──────────────────────────────
 import DyscalculiaPage from "./pages/DyscalculiaPage";
 import NumberSenseEngine from "./pages/dyscalculia/NumberSenseEngine";
 import GuidedStepPractice from "./pages/dyscalculia/GuidedStepPractice";
@@ -47,17 +41,14 @@ import RealLifeMathSimulator from "./pages/dyscalculia/RealLifeMathSimulator";
 import CalmMode from "./pages/dyscalculia/CalmMode";
 import PatternRecognitionTrainer from "./pages/dyscalculia/PatternRecognitionTrainer";
 
-// ── Other conditions ─────────────────────────
 import AnxietyPage from "./pages/AnxietyPage";
 
-// ── OCD ─────────────────────────────────────
 import OCDDashboard from "./pages/ocd/OCDDashboard";
 import ERPHierarchy from "./pages/ocd/ERPHierarchy";
 import RitualDelayer from "./pages/ocd/RitualDelayer";
 import CompulsionHeatmap from "./pages/ocd/CompulsionHeatmap";
 import LogicCheckJournal from "./pages/ocd/LogicCheckJournal";
 
-// ── Dyspraxia ───────────────────────────────
 import DyspraxiaDashboard from "./pages/dyspraxia/DyspraxiaDashboard";
 import AOMILibrary from "./pages/dyspraxia/AOMILibrary";
 import HapticPacer from "./pages/dyspraxia/HapticPacer";
@@ -75,9 +66,6 @@ import VoidWhisper from "./pages/depression/VoidWhisper";
 
 const queryClient = new QueryClient();
 
-/* =====================================================
-   Shell Routes
-===================================================== */
 function ShellRoutes() {
   return (
     <AppLayout>
