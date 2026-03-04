@@ -1,5 +1,5 @@
-import DyslexiaDashboard from "./dyslexia/DyslexiaDashboard";
+import AdaptiveReadingIntelligence from "./dyslexia/AdaptiveReadingIntelligence";
 
 export default function DyslexiaPage() {
-  return <DyslexiaDashboard />;
+  return <AdaptiveReadingIntelligence />;
 }

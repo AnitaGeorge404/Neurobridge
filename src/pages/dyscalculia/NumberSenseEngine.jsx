@@ -6,10 +6,11 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { ArrowLeft, Eye, EyeOff, Volume2 } from 'lucide-react';
+import { ArrowLeft, Eye, EyeOff } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 import {
   recordResponse,
   saveUserProfile,
@@ -273,113 +274,122 @@ export default function NumberSenseEngine() {
   const recommendations = getAdaptiveRecommendations(userProfile);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-blue-100 p-6">
-      {/* Header */}
-      <div className="max-w-4xl mx-auto mb-8">
-        <Link to="/dyscalculia" className="inline-flex items-center text-blue-600 hover:text-blue-700 mb-4">
-          <ArrowLeft className="w-5 h-5 mr-2" />
-          Back to Dashboard
-        </Link>
-
-        <div className="flex items-center justify-between mb-6">
-          <h1 className="text-4xl font-bold text-blue-600">Number Sense Engine</h1>
-          <div className="text-right">
-            <p className="text-sm text-gray-600">Progress:</p>
-            <p className="text-2xl font-bold text-green-600">{correctCount}/{problemCount}</p>
+    <div className="min-h-screen bg-slate-50">
+      <div className="bg-white border-b border-slate-200">
+        <div className="mx-auto max-w-6xl px-6 py-4">
+          <div className="flex items-center gap-6">
+            <button type="button" className="rounded-full bg-teal-600 px-6 py-2 text-sm font-medium text-white shadow-sm">
+              Number Tools
+            </button>
+            <span className="text-sm font-medium text-slate-600">Practice Sessions</span>
+            <span className="text-sm font-medium text-slate-600">Progress</span>
           </div>
         </div>
       </div>
 
-      {/* Main Content */}
-      <div className="max-w-4xl mx-auto space-y-6">
-        {/* Problem Display */}
-        <Card className="p-8 bg-white shadow-lg">
-          <div className="text-center mb-8">
-            {showSymbolic && (
-              <div className="text-5xl font-bold text-gray-800 mb-4">
-                {currentProblem.problem}
+      <div className="mx-auto max-w-6xl px-6 py-8 space-y-6">
+        <div className="flex items-center justify-between">
+          <Link to="/dyscalculia" className="inline-flex items-center text-slate-600 hover:text-slate-900 text-sm font-medium">
+            <ArrowLeft className="w-4 h-4 mr-2" />
+            Back to Number Tools
+          </Link>
+          <p className="text-sm text-slate-500">{correctCount}/{problemCount} correct</p>
+        </div>
+
+        <Card className="bg-white border border-slate-200 p-6">
+          <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
+            <div className="flex items-center gap-3">
+              <h1 className="text-3xl font-bold text-slate-900">Number Sense Engine</h1>
+              <Badge variant="secondary" className="bg-slate-100 text-slate-600">
+                Visual Math
+              </Badge>
+            </div>
+            <span className="text-sm text-slate-500">
+              {problemCount > 0 ? `${Math.round((correctCount / problemCount) * 100)}% accuracy` : 'No attempts yet'}
+            </span>
+          </div>
+
+          <div className="rounded-xl border border-slate-200 bg-slate-50 p-6 mb-6">
+            <div className="text-center mb-6">
+              {showSymbolic && (
+                <div className="text-5xl font-bold text-slate-900 mb-3">
+                  {currentProblem.problem}
+                </div>
+              )}
+              <p className="text-slate-600">What is the answer?</p>
+            </div>
+
+            <div className="bg-white rounded-lg border border-slate-200 p-6 mb-6">
+              {representation === 'dots' && (
+                <DotVisualization num1={currentProblem.num1} num2={currentProblem.num2} operation={currentProblem.operation} />
+              )}
+              {representation === 'blocks' && (
+                <BlockVisualization num1={currentProblem.num1} num2={currentProblem.num2} operation={currentProblem.operation} />
+              )}
+              {representation === 'number_line' && (
+                <NumberLineVisualization num1={currentProblem.num1} num2={currentProblem.num2} operation={currentProblem.operation} />
+              )}
+            </div>
+
+            <div className="flex gap-2 justify-center mb-6 flex-wrap">
+              <Button
+                onClick={() => setRepresentation('dots')}
+                className={representation === 'dots' ? 'bg-teal-600 hover:bg-teal-700 rounded-full px-5' : 'bg-white text-slate-700 border border-slate-200 hover:bg-slate-100 rounded-full px-5'}
+              >
+                🔵 Dots
+              </Button>
+              <Button
+                onClick={() => setRepresentation('blocks')}
+                className={representation === 'blocks' ? 'bg-teal-600 hover:bg-teal-700 rounded-full px-5' : 'bg-white text-slate-700 border border-slate-200 hover:bg-slate-100 rounded-full px-5'}
+              >
+                ⬜ Blocks
+              </Button>
+              <Button
+                onClick={() => setRepresentation('number_line')}
+                className={representation === 'number_line' ? 'bg-teal-600 hover:bg-teal-700 rounded-full px-5' : 'bg-white text-slate-700 border border-slate-200 hover:bg-slate-100 rounded-full px-5'}
+              >
+                📏 Number Line
+              </Button>
+            </div>
+
+            <div className="flex gap-3 mb-4 flex-col sm:flex-row">
+              <input
+                type="number"
+                value={userAnswer}
+                onChange={(e) => setUserAnswer(e.target.value)}
+                onKeyPress={(e) => e.key === 'Enter' && handleSubmit()}
+                placeholder="Enter your answer"
+                className="flex-1 px-4 py-3 border border-slate-300 rounded-lg focus:outline-none focus:border-teal-600 text-xl"
+                autoFocus
+              />
+              <Button
+                onClick={handleSubmit}
+                className="bg-teal-600 hover:bg-teal-700 text-white rounded-full px-8"
+              >
+                Check Answer
+              </Button>
+            </div>
+
+            {feedback && (
+              <div className={`text-center text-lg font-bold p-4 rounded-lg ${
+                feedback.includes('✅')
+                  ? 'bg-green-100 text-green-700'
+                  : 'bg-orange-100 text-orange-700'
+              }`}>
+                {feedback}
               </div>
             )}
-            <p className="text-gray-600">
-              What is the answer?
-            </p>
           </div>
-
-          {/* Visualization */}
-          <div className="bg-gradient-to-br from-blue-50 to-blue-100 p-8 rounded-lg mb-8">
-            {representation === 'dots' && (
-              <DotVisualization num1={currentProblem.num1} num2={currentProblem.num2} operation={currentProblem.operation} />
-            )}
-            {representation === 'blocks' && (
-              <BlockVisualization num1={currentProblem.num1} num2={currentProblem.num2} operation={currentProblem.operation} />
-            )}
-            {representation === 'number_line' && (
-              <NumberLineVisualization num1={currentProblem.num1} num2={currentProblem.num2} operation={currentProblem.operation} />
-            )}
-          </div>
-
-          {/* Representation Toggle */}
-          <div className="flex gap-2 justify-center mb-8 flex-wrap">
-            <Button
-              onClick={() => setRepresentation('dots')}
-              className={representation === 'dots' ? 'bg-blue-600' : 'bg-gray-300'}
-            >
-              🔵 Dots
-            </Button>
-            <Button
-              onClick={() => setRepresentation('blocks')}
-              className={representation === 'blocks' ? 'bg-blue-600' : 'bg-gray-300'}
-            >
-              ⬜ Blocks
-            </Button>
-            <Button
-              onClick={() => setRepresentation('number_line')}
-              className={representation === 'number_line' ? 'bg-blue-600' : 'bg-gray-300'}
-            >
-              📏 Number Line
-            </Button>
-          </div>
-
-          {/* Answer Input */}
-          <div className="flex gap-4 mb-6">
-            <input
-              type="number"
-              value={userAnswer}
-              onChange={(e) => setUserAnswer(e.target.value)}
-              onKeyPress={(e) => e.key === 'Enter' && handleSubmit()}
-              placeholder="Enter your answer"
-              className="flex-1 px-4 py-3 border-2 border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 text-xl"
-              autoFocus
-            />
-            <Button
-              onClick={handleSubmit}
-              className="bg-green-600 hover:bg-green-700 px-8"
-            >
-              Check Answer
-            </Button>
-          </div>
-
-          {/* Feedback */}
-          {feedback && (
-            <div className={`text-center text-lg font-bold p-4 rounded-lg ${
-              feedback.includes('✅') 
-                ? 'bg-green-100 text-green-700' 
-                : 'bg-orange-100 text-orange-700'
-            }`}>
-              {feedback}
-            </div>
-          )}
         </Card>
 
-        {/* Controls */}
-        <Card className="p-6 bg-white shadow-lg">
+        <Card className="bg-white border border-slate-200 p-6">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <div>
-              <p className="text-sm text-gray-600 mb-2">Difficulty</p>
+              <p className="text-sm text-slate-600 mb-2">Difficulty</p>
               <select
                 value={difficulty}
                 onChange={(e) => setDifficulty(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                className="w-full px-3 py-2 border border-slate-300 rounded-lg bg-white"
               >
                 <option value="beginner">Beginner</option>
                 <option value="intermediate">Intermediate</option>
@@ -388,36 +398,36 @@ export default function NumberSenseEngine() {
             </div>
 
             <div>
-              <p className="text-sm text-gray-600 mb-2">Visual Aids</p>
+              <p className="text-sm text-slate-600 mb-2">Visual Aids</p>
               <button
                 onClick={() => setShowSymbolic(!showSymbolic)}
-                className="w-full px-3 py-2 bg-blue-100 rounded-lg text-sm font-semibold text-blue-700 hover:bg-blue-200"
+                className="w-full px-3 py-2 bg-slate-100 rounded-lg text-sm font-semibold text-slate-700 hover:bg-slate-200 inline-flex items-center justify-center gap-2"
               >
-                {showSymbolic ? '👁️ Shown' : '👁️‍🗨️ Hidden'}
+                {showSymbolic ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
+                {showSymbolic ? 'Shown' : 'Hidden'}
               </button>
             </div>
 
             <div>
-              <p className="text-sm text-gray-600 mb-2">Accuracy</p>
-              <div className="text-lg font-bold text-green-600">
+              <p className="text-sm text-slate-600 mb-2">Accuracy</p>
+              <div className="text-lg font-bold text-teal-700">
                 {problemCount > 0 ? `${Math.round((correctCount / problemCount) * 100)}%` : '-'}
               </div>
             </div>
 
             <div>
-              <p className="text-sm text-gray-600 mb-2">Avg Time</p>
-              <div className="text-lg font-bold text-blue-600">
+              <p className="text-sm text-slate-600 mb-2">Avg Time</p>
+              <div className="text-lg font-bold text-slate-700">
                 {userProfile.hesitation_time > 0 ? `${Math.round(userProfile.hesitation_time / 1000)}s` : '-'}
               </div>
             </div>
           </div>
         </Card>
 
-        {/* Tips */}
         {recommendations.visual_aids_enabled && (
-          <Card className="p-6 bg-amber-50 border-2 border-amber-200">
-            <p className="text-amber-800">
-              <strong>💡 Tip:</strong> Visual representations help build number sense. Try switching between dots, blocks, and the number line to find what works best for you!
+          <Card className="p-5 bg-amber-50 border border-amber-200">
+            <p className="text-amber-800 text-sm">
+              <strong>Tip:</strong> Visual representations help build number sense. Try dots, blocks, and number line views to find what works best.
             </p>
           </Card>
         )}

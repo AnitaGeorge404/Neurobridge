@@ -1,30 +1,6 @@
 import { createContext, useContext, useEffect, useState, useCallback, useMemo } from "react";
 import { resolveEnabledFeatures } from "@/lib/featureRegistry";
 import { DISORDERS } from "@/lib/disorders";
-<<<<<<< Updated upstream
-import { pushWardNote } from "@/lib/careSyncStore";
-import { supabase } from "@/lib/supabaseClient";
-
-function buildProfileFromSupabase(supabaseUser) {
-  const meta = supabaseUser?.user_metadata ?? {};
-  const appMeta = supabaseUser?.app_metadata ?? {};
-
-  return {
-    id: supabaseUser.id,
-    email: supabaseUser.email,
-    name: meta.name || meta.full_name || supabaseUser.email?.split("@")[0] || "User",
-    role: appMeta.role || meta.role || "user",
-    abhaId: meta.abhaId ?? null,
-    selectedProfile: meta.selectedProfile ?? null,
-    disorders: Array.isArray(meta.disorders) ? meta.disorders : [],
-    privacy: meta.privacy ?? { shareActivity: true, shareJournal: false, shareAlerts: true },
-    accessibility: meta.accessibility ?? { reduceMotion: false, screenReader: false },
-    linkedWardIds: meta.linkedWardIds ?? [],
-    _supabase: true,
-  };
-}
-=======
->>>>>>> Stashed changes
 
 export const CARE_LINK_REGISTRY = {
   "CL-ARUN-0042": "nb-user-042",
@@ -166,38 +142,9 @@ export const MOCK_WARD_ACTIVITY = {
   },
 };
 
-<<<<<<< Updated upstream
-function resolveMockAccountKey(role, options = {}) {
-  const email = String(options.email || "").toLowerCase().trim();
-  const careLinkId = String(options.careLinkId || "").toUpperCase().trim();
-
-  if (email.includes("riya")) {
-    return role === "guardian" ? "guardian_asd_anxiety" : "user_asd_anxiety";
-  }
-
-  if (email.includes("neha") || careLinkId === "CL-RIYA-0088") {
-    return "guardian_asd_anxiety";
-  }
-
-  if (role === "user") {
-    if (email.includes("anxiety") || email.includes("asd")) {
-      return "user_asd_anxiety";
-    }
-    return "user";
-  }
-
-  if (role === "guardian") {
-    return "guardian";
-  }
-
-  return role;
-}
-
-=======
 // ─────────────────────────────────────────────
 //  Context
 // ─────────────────────────────────────────────
->>>>>>> Stashed changes
 const AuthContext = createContext(null);
 
 export function AuthProvider({ children }) {
@@ -215,148 +162,6 @@ export function AuthProvider({ children }) {
   const enabledFeatures = useMemo(() => resolveEnabledFeatures(disorders), [disorders]);
   const hasFeature = useCallback((featureKey) => enabledFeatures.has(featureKey), [enabledFeatures]);
 
-<<<<<<< Updated upstream
-  useEffect(() => {
-    let mounted = true;
-
-    const applyAuthenticatedUser = (authUser) => {
-      const profile = buildProfileFromSupabase(authUser);
-      const persisted = (() => {
-        try {
-          return JSON.parse(localStorage.getItem(`nb_prefs_${profile.id}`) || "{}");
-        } catch {
-          return {};
-        }
-      })();
-      const fullUser = { ...profile, ...persisted, _supabase: true };
-      localStorage.setItem("nb_auth", JSON.stringify(fullUser));
-      if (!mounted) return;
-      setUser(fullUser);
-      setIsAuthenticated(true);
-      setIsLoading(false);
-    };
-
-    const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
-      if (!mounted) return;
-      if (session?.user) {
-        applyAuthenticatedUser(session.user);
-        return;
-      }
-      try {
-        const stored = localStorage.getItem("nb_auth");
-        if (stored) {
-          const parsed = JSON.parse(stored);
-          setUser(parsed);
-          setIsAuthenticated(true);
-        } else {
-          setUser(null);
-          setIsAuthenticated(false);
-        }
-      } catch {
-        localStorage.removeItem("nb_auth");
-        setUser(null);
-        setIsAuthenticated(false);
-      } finally {
-        setIsLoading(false);
-      }
-    });
-
-    const sessionTimeout = new Promise((resolve) => setTimeout(() => resolve({ data: { session: null } }), 4000));
-    Promise.race([supabase.auth.getSession(), sessionTimeout])
-      .then(({ data: { session } }) => {
-        if (!mounted) return;
-        if (session?.user) {
-          applyAuthenticatedUser(session.user);
-          return;
-        }
-        try {
-          const stored = localStorage.getItem("nb_auth");
-          if (stored) {
-            const parsed = JSON.parse(stored);
-            setUser(parsed);
-            setIsAuthenticated(true);
-          }
-        } catch {
-          localStorage.removeItem("nb_auth");
-        } finally {
-          setIsLoading(false);
-        }
-      })
-      .catch(() => {
-        if (!mounted) return;
-        try {
-          const stored = localStorage.getItem("nb_auth");
-          if (stored) {
-            const parsed = JSON.parse(stored);
-            setUser(parsed);
-            setIsAuthenticated(true);
-          }
-        } catch {
-          localStorage.removeItem("nb_auth");
-        } finally {
-          setIsLoading(false);
-        }
-      });
-
-    return () => {
-      mounted = false;
-      listener?.subscription?.unsubscribe?.();
-    };
-  }, []);
-
-  const loginWithEmail = useCallback(async (email, password) => {
-    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-    if (error) throw new Error(error.message);
-
-    const profile = buildProfileFromSupabase(data.user);
-    const persisted = (() => {
-      try {
-        return JSON.parse(localStorage.getItem(`nb_prefs_${profile.id}`) || "{}");
-      } catch {
-        return {};
-      }
-    })();
-
-    const fullUser = { ...profile, ...persisted, _supabase: true };
-    localStorage.setItem("nb_auth", JSON.stringify(fullUser));
-    setUser(fullUser);
-    setIsAuthenticated(true);
-    return fullUser;
-  }, []);
-
-  const signUpWithEmail = useCallback(async (email, password, name, role = "user") => {
-    const { data, error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        data: { name, role, disorders: [] },
-      },
-    });
-
-    if (error) throw new Error(error.message);
-
-    if (data.user && data.user.identities?.length === 0) {
-      throw new Error("An account with this email already exists. Please sign in.");
-    }
-
-    if (!data.session) {
-      return { needsConfirmation: true };
-    }
-
-    const profile = buildProfileFromSupabase(data.user);
-    localStorage.setItem("nb_auth", JSON.stringify(profile));
-    setUser(profile);
-    setIsAuthenticated(true);
-    return profile;
-  }, []);
-
-  const login = useCallback((role, options = {}) => {
-    return new Promise((resolve, reject) => {
-      setTimeout(() => {
-        const accountKey = options.accountKey || resolveMockAccountKey(role, options);
-        const mockUser = MOCK_USERS[accountKey] || MOCK_USERS[role];
-
-=======
   // Hydrate from localStorage on mount
   useEffect(() => {
     try {
@@ -392,7 +197,6 @@ export function AuthProvider({ children }) {
             : role);
 
         const mockUser = MOCK_USERS[accountKey] || MOCK_USERS[role];
->>>>>>> Stashed changes
         if (!mockUser) {
           reject(new Error("Invalid role"));
           return;
@@ -441,24 +245,12 @@ export function AuthProvider({ children }) {
   const postGuardianNote = useCallback((wardId, text) => {
     return new Promise((resolve) => {
       setTimeout(() => {
-<<<<<<< Updated upstream
-        const key = `nb_guardian_notes_${wardId}`;
-        const existing = (() => {
-          try {
-            return JSON.parse(localStorage.getItem(key) || "[]");
-          } catch {
-            return [];
-          }
-        })();
-
-=======
         // In production this writes to backend; here we store in localStorage
         const key = `nb_guardian_notes_${wardId}`;
         const existing = (() => {
           try { return JSON.parse(localStorage.getItem(key) || "[]"); }
           catch { return []; }
         })();
->>>>>>> Stashed changes
         const note = {
           id: `gn-${Date.now()}`,
           from: "guardian",
@@ -466,22 +258,13 @@ export function AuthProvider({ children }) {
           ts: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
           private: false,
         };
-<<<<<<< Updated upstream
-
         localStorage.setItem(key, JSON.stringify([note, ...existing]));
-        pushWardNote(wardId, { from: "guardian", text, wardName: "Ward", isPrivate: false });
-=======
-        localStorage.setItem(key, JSON.stringify([note, ...existing]));
->>>>>>> Stashed changes
         resolve(note);
       }, 400);
     });
   }, []);
 
-<<<<<<< Updated upstream
-=======
   // ── logout ─────────────────────────────────
->>>>>>> Stashed changes
   const logout = useCallback(() => {
     localStorage.removeItem("nb_auth");
     supabase.auth.signOut().catch(() => {});
@@ -499,11 +282,8 @@ export function AuthProvider({ children }) {
     });
   }, []);
 
-<<<<<<< Updated upstream
-=======
   // ── update selected disorders + recompute features
   // Returns a Promise so callers can await it (e.g. onboarding page).
->>>>>>> Stashed changes
   const updateDisorders = useCallback((newDisorders) => {
     return new Promise((resolve) => {
       setUser((prev) => {
@@ -529,14 +309,8 @@ export function AuthProvider({ children }) {
     enabledFeatures,
     hasFeature,
     updateDisorders,
-<<<<<<< Updated upstream
-    login,
-    loginWithEmail,
-    signUpWithEmail,
-=======
     // ── Core auth ──────────────────────────────
     login,
->>>>>>> Stashed changes
     logout,
     updateUser,
     linkWard,

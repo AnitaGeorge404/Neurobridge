@@ -13,7 +13,8 @@ import { ArrowLeft } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Badge } from '@/components/ui/badge';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import {
   recordResponse,
   saveUserProfile,
@@ -71,21 +72,20 @@ const MissingNumberExercise = ({ userProfile, setUserProfile }) => {
   };
 
   return (
-    <Card className="p-6 bg-white space-y-6">
-      <h3 className="text-2xl font-bold text-blue-600">🔍 Missing Number</h3>
+    <div className="space-y-6 p-6">
+      <p className="text-slate-700 font-semibold">Find the missing number:</p>
 
       {/* Sequence Display */}
-      <div className="bg-blue-50 p-6 rounded-lg border-2 border-blue-300">
-        <p className="text-sm text-gray-700 mb-4">Find the missing number:</p>
+      <div className="bg-slate-100 p-6 rounded-lg border border-slate-200">
         <div className="flex gap-3 justify-center flex-wrap">
           {sequence.numbers.map((num, idx) => (
             <React.Fragment key={idx}>
               {num === null ? (
-                <div className="w-12 h-12 bg-yellow-400 rounded-lg flex items-center justify-center text-2xl font-bold text-yellow-900 border-2 border-yellow-500">
+                <div className="w-12 h-12 bg-amber-400 rounded-lg flex items-center justify-center text-2xl font-bold text-amber-900 border-2 border-amber-500">
                   ?
                 </div>
               ) : (
-                <div className="w-12 h-12 bg-blue-500 rounded-lg flex items-center justify-center text-2xl font-bold text-white">
+                <div className="w-12 h-12 bg-teal-600 rounded-lg flex items-center justify-center text-2xl font-bold text-white">
                   {num}
                 </div>
               )}
@@ -95,7 +95,7 @@ const MissingNumberExercise = ({ userProfile, setUserProfile }) => {
         </div>
 
         {/* Pattern Hint */}
-        <div className="mt-4 bg-white p-3 rounded text-center text-sm text-gray-700">
+        <div className="mt-4 text-center text-sm text-slate-700">
           <p>What's the pattern? (+1? +2? ×2?)</p>
         </div>
       </div>
@@ -107,11 +107,11 @@ const MissingNumberExercise = ({ userProfile, setUserProfile }) => {
           value={userAnswer}
           onChange={(e) => setUserAnswer(e.target.value)}
           placeholder="Enter the missing number..."
-          className="flex-1 px-4 py-3 border-2 border-gray-300 rounded-lg focus:outline-none focus:border-blue-500"
+          className="flex-1 px-4 py-3 border border-slate-300 rounded-lg focus:outline-none focus:border-teal-600"
         />
         <Button
           onClick={handleSubmit}
-          className="bg-green-600 hover:bg-green-700"
+          className="rounded-full bg-teal-600 hover:bg-teal-700"
           disabled={!userAnswer}
         >
           Check
@@ -122,16 +122,16 @@ const MissingNumberExercise = ({ userProfile, setUserProfile }) => {
         <div className={`text-center text-lg font-bold p-3 rounded-lg ${
           feedback.includes('✅')
             ? 'bg-green-100 text-green-700'
-            : 'bg-orange-100 text-orange-700'
+            : 'bg-amber-100 text-amber-700'
         }`}>
           {feedback}
         </div>
       )}
 
-      <div className="text-sm text-gray-600">
+      <div className="text-sm text-slate-600">
         ✓ Correct: <strong>{correct}/{sequences.length}</strong>
       </div>
-    </Card>
+    </div>
   );
 };
 
@@ -180,33 +180,31 @@ const BlockGrowthExercise = ({ userProfile, setUserProfile }) => {
   };
 
   return (
-    <Card className="p-6 bg-white space-y-6">
-      <h3 className="text-2xl font-bold text-green-600">🧩 Block Growth Pattern</h3>
-
-      <p className="text-gray-700">Watch how the blocks grow. What comes next?</p>
+    <div className="space-y-6 p-6">
+      <p className="text-slate-700 font-semibold">Watch how the blocks grow. What comes next?</p>
 
       {/* Visual Pattern */}
-      <div className="space-y-4 bg-green-50 p-6 rounded-lg border-2 border-green-300">
+      <div className="space-y-4 bg-slate-100 p-6 rounded-lg border border-slate-200">
         {patterns.map((pattern) => (
           <div key={pattern.stage} className="flex items-center gap-4">
-            <div className="w-16 font-bold text-lg">Stage {pattern.stage}</div>
+            <div className="w-16 font-semibold text-slate-900 text-sm">Stage {pattern.stage}</div>
             <div className="flex gap-1 flex-wrap">
               {pattern.blocks ? (
                 Array.from({ length: pattern.blocks }).map((_, i) => (
                   <div
                     key={i}
-                    className="w-6 h-6 bg-green-500 rounded border-2 border-green-700 hover:scale-110 transition-transform"
+                    className="w-6 h-6 bg-teal-600 rounded border border-teal-700 hover:scale-110 transition-transform"
                   />
                 ))
               ) : (
                 <div className="flex items-center gap-2">
-                  <div className="text-3xl font-bold text-green-600">?</div>
-                  <span className="text-gray-700">(How many?)</span>
+                  <div className="text-3xl font-bold text-teal-600">?</div>
+                  <span className="text-sm text-slate-700">(How many?)</span>
                 </div>
               )}
             </div>
             {pattern.blocks && (
-              <div className="text-lg font-bold text-green-700 ml-auto">
+              <div className="text-sm font-semibold text-slate-900 ml-auto">
                 {pattern.blocks}
               </div>
             )}
@@ -215,7 +213,7 @@ const BlockGrowthExercise = ({ userProfile, setUserProfile }) => {
       </div>
 
       {/* Hint */}
-      <div className="bg-blue-50 p-4 rounded border-l-4 border-blue-500 text-sm text-blue-900">
+      <div className="bg-amber-50 p-4 rounded border-l-4 border-amber-500 text-sm text-amber-900">
         💡 <strong>Hint:</strong> Look at the differences between stages. Do they grow by the same amount each time?
       </div>
 
@@ -226,11 +224,11 @@ const BlockGrowthExercise = ({ userProfile, setUserProfile }) => {
           value={userAnswer}
           onChange={(e) => setUserAnswer(e.target.value)}
           placeholder="How many blocks at stage 5?"
-          className="flex-1 px-4 py-3 border-2 border-gray-300 rounded-lg focus:outline-none focus:border-green-500"
+          className="flex-1 px-4 py-3 border border-slate-300 rounded-lg focus:outline-none focus:border-teal-600"
         />
         <Button
           onClick={handleSubmit}
-          className="bg-green-600 hover:bg-green-700"
+          className="rounded-full bg-teal-600 hover:bg-teal-700"
           disabled={!userAnswer}
         >
           Check
@@ -241,16 +239,16 @@ const BlockGrowthExercise = ({ userProfile, setUserProfile }) => {
         <div className={`text-center text-lg font-bold p-3 rounded-lg ${
           feedback.includes('✅')
             ? 'bg-green-100 text-green-700'
-            : 'bg-orange-100 text-orange-700'
+            : 'bg-amber-100 text-amber-700'
         }`}>
           {feedback}
         </div>
       )}
 
-      <div className="text-sm text-gray-600">
+      <div className="text-sm text-slate-600">
         ✓ Problems solved: <strong>{correct}</strong>
       </div>
-    </Card>
+    </div>
   );
 };
 
@@ -334,23 +332,21 @@ const ShapeNumberMatching = ({ userProfile, setUserProfile }) => {
   };
 
   return (
-    <Card className="p-6 bg-white space-y-6">
-      <h3 className="text-2xl font-bold text-purple-600">🎨 Shape-Number Matching</h3>
-
-      <p className="text-gray-700">How many sides does this shape have?</p>
+    <div className="space-y-6 p-6">
+      <p className="text-slate-700 font-semibold">How many sides does this shape have?</p>
 
       {/* Shape Display */}
       <div className="flex justify-center">
-        <div className="text-purple-600">
+        <div className="text-teal-600">
           {renderShape(currentShape)}
         </div>
       </div>
 
-      <div className="bg-purple-50 p-4 rounded-lg border-2 border-purple-300 text-center">
-        <p className="text-lg font-bold text-purple-900">
+      <div className="bg-slate-100 p-4 rounded-lg border border-slate-200 text-center">
+        <p className="text-lg font-bold text-slate-900">
           {currentShape.name}
         </p>
-        <p className="text-sm text-purple-700 mt-2">
+        <p className="text-sm text-slate-600 mt-2">
           Count the straight edges
         </p>
       </div>
@@ -362,13 +358,13 @@ const ShapeNumberMatching = ({ userProfile, setUserProfile }) => {
           value={userAnswer}
           onChange={(e) => setUserAnswer(e.target.value)}
           placeholder="Number of sides..."
-          className="flex-1 px-4 py-3 border-2 border-gray-300 rounded-lg focus:outline-none focus:border-purple-500"
+          className="flex-1 px-4 py-3 border border-slate-300 rounded-lg focus:outline-none focus:border-teal-600"
           min="1"
           max="8"
         />
         <Button
           onClick={handleSubmit}
-          className="bg-green-600 hover:bg-green-700"
+          className="rounded-full bg-teal-600 hover:bg-teal-700"
           disabled={!userAnswer}
         >
           Check
@@ -379,16 +375,16 @@ const ShapeNumberMatching = ({ userProfile, setUserProfile }) => {
         <div className={`text-center text-lg font-bold p-3 rounded-lg ${
           feedback.includes('✅')
             ? 'bg-green-100 text-green-700'
-            : 'bg-orange-100 text-orange-700'
+            : 'bg-amber-100 text-amber-700'
         }`}>
           {feedback}
         </div>
       )}
 
-      <div className="text-sm text-gray-600">
+      <div className="text-sm text-slate-600">
         ✓ Correct: <strong>{correct}</strong>
       </div>
-    </Card>
+    </div>
   );
 };
 
@@ -440,29 +436,27 @@ const SkipCounting = ({ userProfile, setUserProfile }) => {
   };
 
   return (
-    <Card className="p-6 bg-white space-y-6">
-      <h3 className="text-2xl font-bold text-orange-600">🔢 Skip Counting</h3>
-
-      <p className="text-gray-700">{sequence.title}</p>
+    <div className="space-y-6 p-6">
+      <p className="text-slate-700 font-semibold">{sequence.title}</p>
 
       {/* Sequence Display */}
-      <div className="bg-orange-50 p-6 rounded-lg border-2 border-orange-300">
+      <div className="bg-slate-100 p-6 rounded-lg border border-slate-200">
         <div className="flex gap-2 justify-center flex-wrap mb-4">
           {pattern.map((num, idx) => (
             <React.Fragment key={idx}>
-              <div className="w-12 h-12 bg-orange-500 rounded-lg flex items-center justify-center text-lg font-bold text-white">
+              <div className="w-12 h-12 bg-teal-600 rounded-lg flex items-center justify-center text-lg font-bold text-white">
                 {num}
               </div>
-              {idx < pattern.length - 1 && <div className="flex items-center text-2xl text-orange-600">→</div>}
+              {idx < pattern.length - 1 && <div className="flex items-center text-2xl text-teal-600">→</div>}
             </React.Fragment>
           ))}
           <div className="flex items-center">→</div>
-          <div className="w-12 h-12 bg-yellow-400 rounded-lg flex items-center justify-center text-lg font-bold text-yellow-900 border-2 border-yellow-500">
+          <div className="w-12 h-12 bg-amber-400 rounded-lg flex items-center justify-center text-lg font-bold text-amber-900 border-2 border-amber-500">
             ?
           </div>
         </div>
 
-        <p className="text-center text-sm text-gray-700">
+        <p className="text-center text-sm text-slate-700">
           Each number increases by <strong>{sequence.step}</strong>
         </p>
       </div>
@@ -474,11 +468,11 @@ const SkipCounting = ({ userProfile, setUserProfile }) => {
           value={userAnswer}
           onChange={(e) => setUserAnswer(e.target.value)}
           placeholder="What's the next number?"
-          className="flex-1 px-4 py-3 border-2 border-gray-300 rounded-lg focus:outline-none focus:border-orange-500"
+          className="flex-1 px-4 py-3 border border-slate-300 rounded-lg focus:outline-none focus:border-teal-600"
         />
         <Button
           onClick={handleSubmit}
-          className="bg-green-600 hover:bg-green-700"
+          className="rounded-full bg-teal-600 hover:bg-teal-700"
           disabled={!userAnswer}
         >
           Check
@@ -489,16 +483,16 @@ const SkipCounting = ({ userProfile, setUserProfile }) => {
         <div className={`text-center text-lg font-bold p-3 rounded-lg ${
           feedback.includes('✅')
             ? 'bg-green-100 text-green-700'
-            : 'bg-orange-100 text-orange-700'
+            : 'bg-amber-100 text-amber-700'
         }`}>
           {feedback}
         </div>
       )}
 
-      <div className="text-sm text-gray-600">
+      <div className="text-sm text-slate-600">
         ✓ Correct: <strong>{correct}/{sequences.length}</strong>
       </div>
-    </Card>
+    </div>
   );
 };
 
@@ -507,7 +501,8 @@ const SkipCounting = ({ userProfile, setUserProfile }) => {
  */
 export default function PatternRecognitionTrainer() {
   const [userProfile, setUserProfile] = useState(null);
-  const [activeTab, setActiveTab] = useState('missing');
+  const [currentExercise, setCurrentExercise] = useState('missing');
+  const [completedExercises, setCompletedExercises] = useState([]);
 
   useEffect(() => {
     const profile = initializeUserProfile();
@@ -518,58 +513,138 @@ export default function PatternRecognitionTrainer() {
     return <div className="flex items-center justify-center min-h-screen">Loading...</div>;
   }
 
+  const exercises = [
+    { id: 'missing', label: 'Missing Number', icon: '🔍', description: 'Find the missing number in sequences' },
+    { id: 'growth', label: 'Block Growth', icon: '🧩', description: 'Identify visual growing patterns' },
+    { id: 'shape', label: 'Shape Matching', icon: '🎨', description: 'Count sides and edges in shapes' },
+    { id: 'skip', label: 'Skip Counting', icon: '🔢', description: 'Practice counting by different intervals' },
+  ];
+
+  const masteredCount = completedExercises.length;
+
+  const handleExerciseComplete = (exerciseId) => {
+    if (!completedExercises.includes(exerciseId)) {
+      setCompletedExercises([...completedExercises, exerciseId]);
+    }
+  };
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-indigo-50 to-purple-100 p-6">
-      {/* Header */}
-      <div className="max-w-4xl mx-auto mb-8">
-        <Link to="/dyscalculia" className="inline-flex items-center text-purple-600 hover:text-purple-700 mb-4">
-          <ArrowLeft className="w-5 h-5 mr-2" />
-          Back to Dashboard
-        </Link>
-
-        <h1 className="text-4xl font-bold text-purple-600 mb-2">Pattern Recognition Trainer</h1>
-        <p className="text-gray-700">
-          Build pattern detection skills with visual and numerical exercises
-        </p>
+    <div className="min-h-screen bg-slate-50">
+      {/* Top Navigation Bar */}
+      <div className="bg-white border-b border-slate-200 px-6 py-4">
+        <div className="max-w-6xl mx-auto flex items-center justify-between">
+          <Link to="/dyscalculia" className="inline-flex items-center text-teal-600 hover:text-teal-700">
+            <ArrowLeft className="w-5 h-5 mr-2" />
+            Back
+          </Link>
+          <Button className="rounded-full bg-teal-600 hover:bg-teal-700 px-4 py-2 text-sm">
+            Pattern Trainer
+          </Button>
+          <div className="w-20"></div>
+        </div>
       </div>
 
-      {/* Tabs */}
-      <div className="max-w-4xl mx-auto">
-        <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="grid w-full grid-cols-4 bg-white border-2 border-gray-300 p-1">
-            <TabsTrigger value="missing">🔍 Missing</TabsTrigger>
-            <TabsTrigger value="growth">🧩 Growth</TabsTrigger>
-            <TabsTrigger value="shape">🎨 Shapes</TabsTrigger>
-            <TabsTrigger value="skip">🔢 Skip</TabsTrigger>
-          </TabsList>
-
-          <TabsContent value="missing" className="space-y-6">
-            <MissingNumberExercise userProfile={userProfile} setUserProfile={setUserProfile} />
-          </TabsContent>
-
-          <TabsContent value="growth" className="space-y-6">
-            <BlockGrowthExercise userProfile={userProfile} setUserProfile={setUserProfile} />
-          </TabsContent>
-
-          <TabsContent value="shape" className="space-y-6">
-            <ShapeNumberMatching userProfile={userProfile} setUserProfile={setUserProfile} />
-          </TabsContent>
-
-          <TabsContent value="skip" className="space-y-6">
-            <SkipCounting userProfile={userProfile} setUserProfile={setUserProfile} />
-          </TabsContent>
-        </Tabs>
+      {/* Tab Navigation */}
+      <div className="bg-white border-b border-slate-200 px-6">
+        <div className="max-w-6xl mx-auto flex gap-8">
+          {['Overview', 'Exercises', 'Tips'].map((tab) => (
+            <button
+              key={tab}
+              className="py-3 px-1 text-sm font-medium text-slate-600 border-b-2 border-transparent hover:border-teal-600 hover:text-teal-600"
+            >
+              {tab}
+            </button>
+          ))}
+        </div>
       </div>
 
-      {/* Info */}
-      <div className="max-w-4xl mx-auto mt-8 bg-white/60 backdrop-blur-md border-2 border-purple-200 rounded-lg p-6">
-        <h3 className="font-bold text-purple-900 mb-3">💡 Why Pattern Recognition?</h3>
-        <ul className="space-y-2 text-purple-800 text-sm">
-          <li>✓ Patterns are everywhere in math</li>
-          <li>✓ Helps predict what comes next</li>
-          <li>✓ Builds mathematical intuition</li>
-          <li>✓ Makes numbers more meaningful</li>
-        </ul>
+      {/* Main Content */}
+      <div className="max-w-6xl mx-auto p-6">
+        {/* Exercise Header */}
+        <div className="mb-6">
+          <div className="flex items-center justify-between mb-4">
+            <h1 className="text-3xl font-bold text-slate-900">Pattern Exercises</h1>
+            <Badge variant="outline" className="text-teal-600 border-teal-200">
+              {masteredCount}/{exercises.length} completed
+            </Badge>
+          </div>
+          <p className="text-slate-600">
+            Build pattern detection skills with visual and numerical exercises. Master each pattern type to unlock your mathematical intuition.
+          </p>
+        </div>
+
+        {/* Exercise Cards */}
+        <div className="space-y-3 mb-8">
+          {exercises.map((exercise) => (
+            <Card
+              key={exercise.id}
+              className={`p-4 border cursor-pointer transition-all ${
+                currentExercise === exercise.id
+                  ? 'border-teal-600 bg-teal-50'
+                  : 'border-slate-200 hover:border-slate-300'
+              }`}
+              onClick={() => setCurrentExercise(exercise.id)}
+            >
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-4">
+                  <span className="text-3xl">{exercise.icon}</span>
+                  <div>
+                    <h3 className="font-semibold text-slate-900">{exercise.label}</h3>
+                    <p className="text-sm text-slate-600">{exercise.description}</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-3">
+                  {completedExercises.includes(exercise.id) && (
+                    <span className="text-green-600 text-lg">✓</span>
+                  )}
+                  <Button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setCurrentExercise(exercise.id);
+                    }}
+                    className="rounded-full bg-teal-600 hover:bg-teal-700"
+                  >
+                    Start
+                  </Button>
+                </div>
+              </div>
+            </Card>
+          ))}
+        </div>
+
+        {/* Active Exercise Content */}
+        <div>
+          <Card className="border-slate-200 overflow-hidden">
+            {currentExercise === 'missing' && (
+              <MissingNumberExercise userProfile={userProfile} setUserProfile={setUserProfile} />
+            )}
+
+            {currentExercise === 'growth' && (
+              <BlockGrowthExercise userProfile={userProfile} setUserProfile={setUserProfile} />
+            )}
+
+            {currentExercise === 'shape' && (
+              <ShapeNumberMatching userProfile={userProfile} setUserProfile={setUserProfile} />
+            )}
+
+            {currentExercise === 'skip' && (
+              <SkipCounting userProfile={userProfile} setUserProfile={setUserProfile} />
+            )}
+          </Card>
+        </div>
+
+        {/* Info Section */}
+        {masteredCount === exercises.length && (
+          <Card className="mt-8 p-8 bg-slate-50 border-slate-200 text-center">
+            <div className="text-6xl mb-4">🎉</div>
+            <h3 className="text-2xl font-bold text-teal-600 mb-4">
+              Pattern Master!
+            </h3>
+            <p className="text-slate-700 mb-6">
+              Congratulations! You've mastered all pattern recognition exercises. Your mathematical intuition is growing stronger.
+            </p>
+          </Card>
+        )}
       </div>
     </div>
   );

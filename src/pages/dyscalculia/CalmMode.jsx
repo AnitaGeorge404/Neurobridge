@@ -17,11 +17,12 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { ArrowLeft, Heart, Leaf, Wind } from 'lucide-react';
+import { ArrowLeft, Heart } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Badge } from '@/components/ui/badge';
 import {
   initializeUserProfile,
   shouldActivateCalmMode,
@@ -50,7 +51,7 @@ const BreathingExercise = ({ onComplete }) => {
     const interval = setInterval(() => {
       currentPhase = (currentPhase + 1) % cycles.length;
       setBreathingCycle(currentPhase);
-    }, 4000); // Simplified timing
+    }, 4000);
 
     return () => clearInterval(interval);
   }, [isPlaying]);
@@ -63,26 +64,24 @@ const BreathingExercise = ({ onComplete }) => {
   ];
 
   return (
-    <Card className="p-8 bg-gradient-to-br from-blue-50 to-cyan-50 text-center space-y-6">
-      <h3 className="text-2xl font-bold text-blue-600">💙 Take a Calming Breath</h3>
-
+    <div className="space-y-4">
       {isPlaying ? (
-        <div className="space-y-8">
+        <div className="space-y-8 text-center p-8">
           {/* Animated Circle */}
           <div className="flex justify-center">
             <div
-              className="w-32 h-32 rounded-full bg-gradient-to-br from-blue-400 to-cyan-400 flex items-center justify-center text-white font-bold text-center transition-all duration-1000 ease-in-out shadow-lg"
+              className="w-32 h-32 rounded-full bg-gradient-to-br from-teal-400 to-teal-500 flex items-center justify-center text-white font-bold text-center transition-all duration-1000 ease-in-out shadow-lg"
               style={{
                 transform: breathingCycle % 2 === 0 ? 'scale(0.8)' : 'scale(1.3)',
               }}
             >
-              <div className="text-3xl">
+              <div className="text-2xl">
                 {phases[breathingCycle]?.label}
               </div>
             </div>
           </div>
 
-          <p className="text-lg text-gray-700 font-semibold">
+          <p className="text-lg text-slate-700 font-semibold">
             {phases[breathingCycle]?.phase}
           </p>
 
@@ -91,25 +90,25 @@ const BreathingExercise = ({ onComplete }) => {
               setIsPlaying(false);
               onComplete();
             }}
-            className="w-full bg-green-600 hover:bg-green-700 py-6 text-lg"
+            className="rounded-full bg-teal-600 hover:bg-teal-700 py-2 px-6"
           >
             ✓ I Feel Better
           </Button>
         </div>
       ) : (
-        <div className="space-y-4">
-          <p className="text-gray-700">
+        <div className="space-y-4 p-6">
+          <p className="text-slate-700">
             Let's take a moment to calm your mind and body. Follow the circle as it grows and shrinks.
           </p>
           <Button
             onClick={() => setIsPlaying(true)}
-            className="w-full bg-blue-600 hover:bg-blue-700 py-6 text-lg"
+            className="rounded-full bg-teal-600 hover:bg-teal-700"
           >
-            🌬️ Start Breathing Exercise
+            Start Exercise
           </Button>
         </div>
       )}
-    </Card>
+    </div>
   );
 };
 
@@ -126,11 +125,11 @@ const GroundingExercise = ({ onComplete }) => {
   });
 
   const instructions = [
-    { sense: 'see', number: 5, emoji: '👀', label: 'things you SEE', color: 'blue' },
-    { sense: 'hear', number: 4, emoji: '👂', label: 'things you HEAR', color: 'green' },
-    { sense: 'touch', number: 3, emoji: '✋', label: 'things you FEEL (touch)', color: 'yellow' },
-    { sense: 'smell', number: 2, emoji: '👃', label: 'things you SMELL', color: 'purple' },
-    { sense: 'taste', number: 1, emoji: '👅', label: 'things you TASTE', color: 'red' },
+    { sense: 'see', number: 5, emoji: '👀', label: 'things you SEE' },
+    { sense: 'hear', number: 4, emoji: '👂', label: 'things you HEAR' },
+    { sense: 'touch', number: 3, emoji: '✋', label: 'things you FEEL (touch)' },
+    { sense: 'smell', number: 2, emoji: '👃', label: 'things you SMELL' },
+    { sense: 'taste', number: 1, emoji: '👅', label: 'things you TASTE' },
   ];
 
   const handleIncrement = (sense) => {
@@ -146,10 +145,8 @@ const GroundingExercise = ({ onComplete }) => {
   );
 
   return (
-    <Card className="p-8 bg-gradient-to-br from-green-50 to-emerald-50 space-y-6">
-      <h3 className="text-2xl font-bold text-green-600">🌿 Grounding Exercise (5-4-3-2-1)</h3>
-
-      <p className="text-gray-700">
+    <div className="space-y-4 p-6">
+      <p className="text-slate-700">
         This exercise brings you back to the present moment. Think about what you experience with each sense.
       </p>
 
@@ -157,10 +154,10 @@ const GroundingExercise = ({ onComplete }) => {
         {instructions.map((item) => (
           <div key={item.sense} className="space-y-2">
             <div className="flex items-center justify-between">
-              <label className="font-semibold text-gray-800">
+              <label className="font-semibold text-slate-800">
                 {item.emoji} Find {item.number} {item.label}
               </label>
-              <span className="text-lg font-bold text-green-600">
+              <span className="text-sm font-semibold text-teal-600">
                 {selectedSenses[item.sense]}/{item.number}
               </span>
             </div>
@@ -170,10 +167,10 @@ const GroundingExercise = ({ onComplete }) => {
                 <button
                   key={i}
                   onClick={() => handleIncrement(item.sense)}
-                  className={`w-8 h-8 rounded-full font-bold text-white transition-all ${
+                  className={`w-8 h-8 rounded-full font-bold text-white transition-all text-xs ${
                     i < selectedSenses[item.sense]
-                      ? `bg-${item.color}-600`
-                      : `bg-${item.color}-200 opacity-50`
+                      ? 'bg-teal-600'
+                      : 'bg-slate-300 opacity-50'
                   }`}
                 >
                   {i + 1}
@@ -187,11 +184,11 @@ const GroundingExercise = ({ onComplete }) => {
       <Button
         onClick={onComplete}
         disabled={!allComplete}
-        className="w-full bg-green-600 hover:bg-green-700 py-6 text-lg disabled:opacity-50"
+        className="rounded-full bg-teal-600 hover:bg-teal-700 w-full disabled:opacity-50"
       >
         {allComplete ? '✓ I Feel Grounded' : 'Complete all senses...'}
       </Button>
-    </Card>
+    </div>
   );
 };
 
@@ -226,30 +223,33 @@ const CalmMathLesson = ({ onComplete }) => {
   const lesson = lessons[currentLesson];
 
   return (
-    <Card className="p-8 bg-gradient-to-br from-rose-50 to-pink-50 space-y-6">
-      <h3 className="text-2xl font-bold text-rose-600">💚 Remember This</h3>
-
+    <div className="space-y-4 p-6">
       <div className="text-6xl text-center mb-4">{lesson.icon}</div>
 
-      <div className="bg-white p-6 rounded-lg border-2 border-rose-300">
-        <h4 className="text-xl font-bold text-rose-700 mb-3">{lesson.title}</h4>
-        <p className="text-gray-700 text-lg leading-relaxed">
+      <div className="bg-white p-6 rounded-lg border border-slate-200">
+        <h4 className="text-xl font-bold text-slate-900 mb-3">{lesson.title}</h4>
+        <p className="text-slate-700 leading-relaxed">
           {lesson.description}
         </p>
       </div>
 
-      <div className="flex gap-2 justify-center">
+      <div className="flex gap-2 justify-between">
         <Button
           onClick={() => setCurrentLesson(Math.max(0, currentLesson - 1))}
           disabled={currentLesson === 0}
-          className="bg-gray-400 hover:bg-gray-500 disabled:opacity-50"
+          variant="outline"
+          className="disabled:opacity-50"
         >
           ← Previous
         </Button>
+        <span className="flex items-center text-sm text-slate-600">
+          {currentLesson + 1} / {lessons.length}
+        </span>
         <Button
           onClick={() => setCurrentLesson(Math.min(lessons.length - 1, currentLesson + 1))}
           disabled={currentLesson === lessons.length - 1}
-          className="bg-gray-400 hover:bg-gray-500 disabled:opacity-50"
+          variant="outline"
+          className="disabled:opacity-50"
         >
           Next →
         </Button>
@@ -258,21 +258,19 @@ const CalmMathLesson = ({ onComplete }) => {
       {currentLesson === lessons.length - 1 && (
         <Button
           onClick={onComplete}
-          className="w-full bg-pink-600 hover:bg-pink-700 py-6 text-lg"
+          className="rounded-full bg-teal-600 hover:bg-teal-700 w-full"
         >
           ✓ Ready to Continue
         </Button>
       )}
-    </Card>
+    </div>
   );
 };
 
-/**
- * Main Calm Mode Component
- */
 export default function CalmMode() {
   const [userProfile, setUserProfile] = useState(null);
-  const [currentExercise, setCurrentExercise] = useState('welcome');
+  const [currentExercise, setCurrentExercise] = useState('breathing');
+  const [completedExercises, setCompletedExercises] = useState([]);
 
   useEffect(() => {
     const profile = initializeUserProfile();
@@ -286,6 +284,11 @@ export default function CalmMode() {
   const isCalmModeTriggered = shouldActivateCalmMode(userProfile);
 
   const handleExerciseComplete = () => {
+    // Mark exercise as completed
+    if (!completedExercises.includes(currentExercise)) {
+      setCompletedExercises([...completedExercises, currentExercise]);
+    }
+
     // Move to next exercise or finish
     const exercises = ['breathing', 'grounding', 'lesson'];
     const nextIdx = exercises.indexOf(currentExercise) + 1;
@@ -300,99 +303,148 @@ export default function CalmMode() {
     }
   };
 
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-rose-50 via-pink-50 to-purple-50 p-6">
-      {/* Header */}
-      <div className="max-w-4xl mx-auto mb-8">
-        <Link to="/dyscalculia" className="inline-flex items-center text-rose-600 hover:text-rose-700 mb-4">
-          <ArrowLeft className="w-5 h-5 mr-2" />
-          Back to Dashboard
-        </Link>
+  const exercises = [
+    { id: 'breathing', label: 'Breathing Exercise', icon: '🌬️' },
+    { id: 'grounding', label: 'Grounding Technique', icon: '🌿' },
+    { id: 'lesson', label: 'Supportive Lesson', icon: '💡' },
+  ];
 
-        <h1 className="text-4xl font-bold text-rose-600 mb-2">Calm Mode</h1>
-        <p className="text-gray-700">
-          Take a moment to reset. No pressure, no timer - just you and some supportive exercises.
-        </p>
+  const masteredCount = completedExercises.length;
+
+  return (
+    <div className="min-h-screen bg-slate-50">
+      {/* Top Navigation Bar */}
+      <div className="bg-white border-b border-slate-200 px-6 py-4">
+        <div className="max-w-6xl mx-auto flex items-center justify-between">
+          <Link to="/dyscalculia" className="inline-flex items-center text-teal-600 hover:text-teal-700">
+            <ArrowLeft className="w-5 h-5 mr-2" />
+            Back
+          </Link>
+          <Button className="rounded-full bg-teal-600 hover:bg-teal-700 px-4 py-2 text-sm">
+            Calm Mode
+          </Button>
+          <div className="w-20"></div>
+        </div>
       </div>
 
-      {/* Alert if triggered */}
-      {isCalmModeTriggered && (
-        <div className="max-w-4xl mx-auto mb-8">
-          <Alert className="bg-rose-100 border-rose-300">
-            <Heart className="h-5 w-5 text-rose-600" />
-            <AlertDescription className="text-rose-800 ml-3">
-              <strong>💚 We're Here For You:</strong> We noticed you might be feeling challenged right now. Let's take a break together and use these calming techniques. You're doing great!
-            </AlertDescription>
-          </Alert>
-        </div>
-      )}
-
-      {/* Main Content */}
-      <div className="max-w-4xl mx-auto space-y-8">
-        {/* Exercise Navigation */}
-        <div className="flex justify-center gap-2 flex-wrap">
-          {['breathing', 'grounding', 'lesson'].map((exercise, idx) => (
+      {/* Tab Navigation */}
+      <div className="bg-white border-b border-slate-200 px-6">
+        <div className="max-w-6xl mx-auto flex gap-8">
+          {['Overview', 'Exercises', 'Tips'].map((tab) => (
             <button
-              key={exercise}
-              onClick={() => setCurrentExercise(exercise)}
-              className={`px-4 py-2 rounded-full font-semibold transition-all ${
-                currentExercise === exercise
-                  ? 'bg-rose-600 text-white shadow-lg scale-105'
-                  : 'bg-white text-rose-600 border-2 border-rose-300 hover:bg-rose-50'
-              }`}
+              key={tab}
+              className="py-3 px-1 text-sm font-medium text-slate-600 border-b-2 border-transparent hover:border-teal-600 hover:text-teal-600"
             >
-              {idx + 1}. {exercise === 'breathing' ? '🌬️ Breathe' : exercise === 'grounding' ? '🌿 Ground' : '💡 Learn'}
+              {tab}
             </button>
           ))}
         </div>
+      </div>
 
-        {/* Content Based on Current Exercise */}
-        {currentExercise === 'breathing' && (
-          <BreathingExercise onComplete={handleExerciseComplete} />
+      {/* Main Content */}
+      <div className="max-w-6xl mx-auto p-6">
+        {/* Alert if triggered */}
+        {isCalmModeTriggered && (
+          <div className="mb-6">
+            <Alert className="bg-amber-50 border-amber-200">
+              <Heart className="h-5 w-5 text-amber-600" />
+              <AlertDescription className="text-amber-800 ml-3">
+                <strong>We're Here For You:</strong> We noticed you might be feeling challenged. Let's take a break together with these calming exercises. You're doing great!
+              </AlertDescription>
+            </Alert>
+          </div>
         )}
 
-        {currentExercise === 'grounding' && (
-          <GroundingExercise onComplete={handleExerciseComplete} />
-        )}
+        {/* Exercise Header */}
+        <div className="mb-6">
+          <div className="flex items-center justify-between mb-4">
+            <h1 className="text-3xl font-bold text-slate-900">Calming Exercises</h1>
+            <Badge variant="outline" className="text-teal-600 border-teal-200">
+              {masteredCount}/{exercises.length} completed
+            </Badge>
+          </div>
+          <p className="text-slate-600">
+            Take time to reset with supportive exercises. No pressure, no timer—just you and some helpful guidance.
+          </p>
+        </div>
 
-        {currentExercise === 'lesson' && (
-          <CalmMathLesson onComplete={handleExerciseComplete} />
-        )}
+        {/* Exercises Grid */}
+        <div className="space-y-3">
+          {exercises.map((exercise) => (
+            <Card
+              key={exercise.id}
+              className={`p-4 border cursor-pointer transition-all ${
+                currentExercise === exercise.id
+                  ? 'border-teal-600 bg-teal-50'
+                  : 'border-slate-200 hover:border-slate-300'
+              }`}
+              onClick={() => setCurrentExercise(exercise.id)}
+            >
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-4">
+                  <span className="text-3xl">{exercise.icon}</span>
+                  <div>
+                    <h3 className="font-semibold text-slate-900">{exercise.label}</h3>
+                    <p className="text-sm text-slate-600">
+                      {exercise.id === 'breathing' && 'Guided breathing to calm your mind'}
+                      {exercise.id === 'grounding' && '5-4-3-2-1 sensory grounding technique'}
+                      {exercise.id === 'lesson' && 'Supportive affirmations about learning'}
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-3">
+                  {completedExercises.includes(exercise.id) && (
+                    <span className="text-green-600 text-lg">✓</span>
+                  )}
+                  <Button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setCurrentExercise(exercise.id);
+                    }}
+                    className="rounded-full bg-teal-600 hover:bg-teal-700"
+                  >
+                    Start
+                  </Button>
+                </div>
+              </div>
+            </Card>
+          ))}
+        </div>
+
+        {/* Active Exercise Content */}
+        <div className="mt-8">
+          <Card className="border-slate-200 overflow-hidden">
+            {currentExercise === 'breathing' && (
+              <BreathingExercise onComplete={handleExerciseComplete} />
+            )}
+
+            {currentExercise === 'grounding' && (
+              <GroundingExercise onComplete={handleExerciseComplete} />
+            )}
+
+            {currentExercise === 'lesson' && (
+              <CalmMathLesson onComplete={handleExerciseComplete} />
+            )}
+          </Card>
+        </div>
 
         {/* Completion Message */}
-        {currentExercise === 'lesson' && (
-          <Card className="p-8 bg-white border-2 border-green-400 text-center">
+        {completedExercises.length === exercises.length && (
+          <Card className="mt-8 p-8 bg-slate-50 border-slate-200 text-center">
             <div className="text-6xl mb-4">✨</div>
-            <h3 className="text-2xl font-bold text-green-600 mb-4">
+            <h3 className="text-2xl font-bold text-teal-600 mb-4">
               You Made It!
             </h3>
-            <p className="text-gray-700 mb-6">
+            <p className="text-slate-700 mb-6">
               You've taken time to care for yourself. That's the most important math skill: knowing when to rest.
             </p>
             <Link to="/dyscalculia">
-              <Button className="bg-green-600 hover:bg-green-700 px-8 py-6 text-lg">
+              <Button className="rounded-full bg-teal-600 hover:bg-teal-700 px-8">
                 Return to Dashboard
               </Button>
             </Link>
           </Card>
         )}
-      </div>
-
-      {/* Info Section */}
-      <div className="max-w-4xl mx-auto mt-12 grid grid-cols-1 md:grid-cols-2 gap-6">
-        <Card className="p-6 bg-white/60 backdrop-blur-md">
-          <h3 className="font-bold text-rose-700 mb-3">🌬️ Breathing Exercise</h3>
-          <p className="text-sm text-gray-700">
-            Slow, deep breathing activates your body's relaxation response. Great for managing anxiety.
-          </p>
-        </Card>
-
-        <Card className="p-6 bg-white/60 backdrop-blur-md">
-          <h3 className="font-bold text-green-700 mb-3">🌿 Grounding Technique</h3>
-          <p className="text-sm text-gray-700">
-            The 5-4-3-2-1 method brings you to the present moment by engaging your senses.
-          </p>
-        </Card>
       </div>
     </div>
   );

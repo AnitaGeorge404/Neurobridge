@@ -10,12 +10,12 @@ import { ArrowLeft, HelpCircle, ChevronRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import {
   recordResponse,
   saveUserProfile,
   initializeUserProfile,
-  getAdaptiveRecommendations,
   determineScaffoldLevel
 } from '@/lib/dyscalculiaAdaptiveEngine';
 
@@ -149,18 +149,18 @@ const BlockDisplay = ({ value, place, highlight }) => {
   return (
     <div className={`text-center p-4 rounded-lg transition-all ${
       highlight === place
-        ? 'bg-yellow-100 border-4 border-yellow-500 scale-105'
-        : 'bg-gray-100 border-2 border-gray-300'
+        ? 'bg-teal-50 border-2 border-teal-500 scale-105'
+        : 'bg-slate-100 border border-slate-300'
     }`}>
-      <p className="text-sm font-semibold text-gray-700 mb-2">
+      <p className="text-sm font-semibold text-slate-700 mb-2">
         {place === 'ones' ? '👉 ONES' : place === 'tens' ? '👉 TENS' : '👉 HUNDREDS'}
       </p>
-      <div className="text-4xl font-bold text-blue-600">
+      <div className="text-4xl font-bold text-teal-700">
         {value}
       </div>
-      {place === 'ones' && <p className="text-xs text-gray-600 mt-2">ones place</p>}
-      {place === 'tens' && <p className="text-xs text-gray-600 mt-2">tens place</p>}
-      {place === 'hundreds' && <p className="text-xs text-gray-600 mt-2">hundreds place</p>}
+      {place === 'ones' && <p className="text-xs text-slate-600 mt-2">ones place</p>}
+      {place === 'tens' && <p className="text-xs text-slate-600 mt-2">tens place</p>}
+      {place === 'hundreds' && <p className="text-xs text-slate-600 mt-2">hundreds place</p>}
     </div>
   );
 };
@@ -202,7 +202,6 @@ export default function GuidedStepPractice() {
   const steps = getSteps(currentProblem);
   const currentStep = steps[currentStepIndex];
   const scaffoldLevel = determineScaffoldLevel(userProfile);
-  const recommendations = getAdaptiveRecommendations(userProfile);
 
   const handleSubmitStep = () => {
     if (!userAnswer) return;
@@ -255,154 +254,155 @@ export default function GuidedStepPractice() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-cyan-50 to-blue-100 p-6">
-      {/* Header */}
-      <div className="max-w-4xl mx-auto mb-8">
-        <Link to="/dyscalculia" className="inline-flex items-center text-blue-600 hover:text-blue-700 mb-4">
-          <ArrowLeft className="w-5 h-5 mr-2" />
-          Back to Dashboard
-        </Link>
-
-        <div className="flex items-center justify-between mb-6">
-          <h1 className="text-4xl font-bold text-blue-600">Guided Step Practice</h1>
-          <div className="text-right text-sm text-gray-700">
-            <p>Completed: <strong>{completedProblems}</strong></p>
-            <p>Correct steps: <strong>{correctSteps}</strong></p>
+    <div className="min-h-screen bg-slate-50">
+      <div className="bg-white border-b border-slate-200">
+        <div className="mx-auto max-w-6xl px-6 py-4">
+          <div className="flex items-center gap-6">
+            <button type="button" className="rounded-full bg-teal-600 px-6 py-2 text-sm font-medium text-white shadow-sm">
+              Number Tools
+            </button>
+            <span className="text-sm font-medium text-slate-600">Practice Sessions</span>
+            <span className="text-sm font-medium text-slate-600">Progress</span>
           </div>
         </div>
       </div>
 
-      {/* Main Content */}
-      <div className="max-w-4xl mx-auto space-y-6">
-        {/* Problem Header */}
-        <Card className="p-8 bg-white shadow-lg">
-          <div className="text-center mb-8">
-            <h2 className="text-sm text-gray-600 mb-2">Today's Problem</h2>
-            <div className="text-6xl font-bold text-blue-600">
-              {currentProblem.problem}
+      <div className="mx-auto max-w-6xl px-6 py-8 space-y-6">
+        <div className="flex items-center justify-between">
+          <Link to="/dyscalculia" className="inline-flex items-center text-slate-600 hover:text-slate-900 text-sm font-medium">
+            <ArrowLeft className="w-4 h-4 mr-2" />
+            Back to Number Tools
+          </Link>
+          <div className="text-right text-sm text-slate-600">
+            <p>Completed: <strong>{completedProblems}</strong></p>
+            <p>Correct steps: <strong>{correctSteps}</strong></p>
+          </div>
+        </div>
+
+        <Card className="bg-white border border-slate-200 p-6">
+          <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
+            <div className="flex items-center gap-3">
+              <h1 className="text-3xl font-bold text-slate-900">Guided Step Practice</h1>
+              <Badge variant="secondary" className="bg-slate-100 text-slate-600">
+                Scaffolded
+              </Badge>
             </div>
-            <p className="text-gray-600 mt-3">
-              Solve this step by step. Don't skip ahead!
-            </p>
+            <span className="text-sm text-slate-500">{currentStepIndex + 1}/{steps.length} steps</span>
           </div>
 
-          {/* Progress Through Steps */}
-          <div className="flex items-center justify-center gap-2 mb-8">
-            {steps.map((_, idx) => (
-              <React.Fragment key={idx}>
-                <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm transition-all ${
-                  idx < currentStepIndex
-                    ? 'bg-green-500 text-white'
-                    : idx === currentStepIndex
-                    ? 'bg-blue-600 text-white scale-110'
-                    : 'bg-gray-300 text-gray-700'
+          <div className="rounded-xl border border-slate-200 bg-slate-50 p-6">
+            <div className="text-center mb-6">
+              <h2 className="text-sm text-slate-600 mb-2">Today's Problem</h2>
+              <div className="text-5xl font-bold text-slate-900">{currentProblem.problem}</div>
+              <p className="text-slate-600 mt-3">Solve this step by step. Don't skip ahead!</p>
+            </div>
+
+            <div className="flex items-center justify-center gap-2 mb-8">
+              {steps.map((_, idx) => (
+                <React.Fragment key={idx}>
+                  <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm transition-all ${
+                    idx < currentStepIndex
+                      ? 'bg-green-500 text-white'
+                      : idx === currentStepIndex
+                      ? 'bg-teal-600 text-white scale-110'
+                      : 'bg-slate-300 text-slate-700'
+                  }`}>
+                    {idx < currentStepIndex ? '✓' : idx + 1}
+                  </div>
+                  {idx < steps.length - 1 && <div className="w-8 h-1 bg-slate-300" />}
+                </React.Fragment>
+              ))}
+            </div>
+
+            <Card className="p-6 bg-white border border-slate-200 mb-6">
+              <div className="mb-6">
+                <div className="bg-teal-50 border-l-4 border-teal-600 p-4 rounded mb-6">
+                  <h3 className="text-xl font-bold text-teal-900">
+                    Step {currentStep.step}: {currentStep.instruction}
+                  </h3>
+                </div>
+
+                {currentStep.highlight === 'ones' && (
+                  <div className="grid grid-cols-2 gap-4 mb-6">
+                    <BlockDisplay value={currentProblem.ones} place="ones" highlight={currentStep.highlight} />
+                    {currentProblem.addOnes !== undefined && (
+                      <BlockDisplay value={currentProblem.addOnes} place="add" highlight={currentStep.highlight} />
+                    )}
+                  </div>
+                )}
+
+                {currentStep.highlight === 'tens' && (
+                  <div className="grid grid-cols-2 gap-4 mb-6">
+                    <BlockDisplay value={currentProblem.tens} place="tens" highlight={currentStep.highlight} />
+                    {currentProblem.addTens !== undefined && (
+                      <BlockDisplay value={currentProblem.addTens} place="add" highlight={currentStep.highlight} />
+                    )}
+                  </div>
+                )}
+
+                {currentStep.highlight === 'result' && (
+                  <div className="bg-green-100 p-6 rounded-lg text-center mb-6">
+                    <p className="text-slate-700 mb-3">You've completed all the steps!</p>
+                    <div className="text-5xl font-bold text-green-600">{currentProblem.answer}</div>
+                  </div>
+                )}
+              </div>
+
+              <div className="bg-amber-50 p-4 rounded-lg border border-amber-200 mb-6">
+                <p className="text-lg font-semibold text-amber-900 text-center">{currentStep.question}</p>
+              </div>
+
+              {showHint && (
+                <Alert className="bg-amber-50 border-amber-300 mb-6">
+                  <HelpCircle className="h-5 w-5 text-amber-600" />
+                  <AlertDescription className="text-amber-800 ml-3">
+                    <strong>Hint:</strong> Let me show you: {currentProblem.ones} + {currentProblem.addOnes} on a visual block might help visualize the combining.
+                  </AlertDescription>
+                </Alert>
+              )}
+
+              <div className="flex gap-3 mb-6 flex-col sm:flex-row">
+                <input
+                  type="number"
+                  value={userAnswer}
+                  onChange={(e) => setUserAnswer(e.target.value)}
+                  onKeyPress={(e) => e.key === 'Enter' && handleSubmitStep()}
+                  placeholder="Type your answer..."
+                  className="flex-1 px-4 py-3 border border-slate-300 rounded-lg focus:outline-none focus:border-teal-600 text-xl font-semibold"
+                  autoFocus
+                />
+                <Button
+                  onClick={handleSubmitStep}
+                  className="bg-teal-600 hover:bg-teal-700 text-white rounded-full px-8 font-semibold"
+                >
+                  <ChevronRight className="w-5 h-5" />
+                  Check
+                </Button>
+              </div>
+
+              {feedback && (
+                <div className={`text-center text-lg font-bold p-4 rounded-lg ${
+                  feedback.includes('✅')
+                    ? 'bg-green-100 text-green-700'
+                    : feedback.includes('🎉')
+                    ? 'bg-blue-100 text-blue-700'
+                    : 'bg-orange-100 text-orange-700'
                 }`}>
-                  {idx < currentStepIndex ? '✓' : idx + 1}
+                  {feedback}
                 </div>
-                {idx < steps.length - 1 && <div className="w-8 h-1 bg-gray-300" />}
-              </React.Fragment>
-            ))}
+              )}
+            </Card>
           </div>
         </Card>
 
-        {/* Current Step */}
-        <Card className="p-8 bg-white shadow-lg">
-          <div className="mb-8">
-            <div className="bg-blue-100 border-l-4 border-blue-600 p-4 rounded mb-6">
-              <h3 className="text-xl font-bold text-blue-900">
-                Step {currentStep.step}: {currentStep.instruction}
-              </h3>
-            </div>
-
-            {/* Digit Highlighting */}
-            {currentStep.highlight === 'ones' && (
-              <div className="grid grid-cols-2 gap-4 mb-6">
-                <BlockDisplay value={currentProblem.ones} place="ones" highlight={currentStep.highlight} />
-                {currentProblem.addOnes !== undefined && (
-                  <BlockDisplay value={currentProblem.addOnes} place="add" highlight={currentStep.highlight} />
-                )}
-              </div>
-            )}
-
-            {currentStep.highlight === 'tens' && (
-              <div className="grid grid-cols-2 gap-4 mb-6">
-                <BlockDisplay value={currentProblem.tens} place="tens" highlight={currentStep.highlight} />
-                {currentProblem.addTens !== undefined && (
-                  <BlockDisplay value={currentProblem.addTens} place="add" highlight={currentStep.highlight} />
-                )}
-              </div>
-            )}
-
-            {currentStep.highlight === 'result' && (
-              <div className="bg-green-100 p-6 rounded-lg text-center mb-6">
-                <p className="text-gray-700 mb-3">You've completed all the steps!</p>
-                <div className="text-5xl font-bold text-green-600">
-                  {currentProblem.answer}
-                </div>
-              </div>
-            )}
-          </div>
-
-          {/* Question */}
-          <div className="bg-yellow-50 p-4 rounded-lg border-2 border-yellow-300 mb-6">
-            <p className="text-lg font-semibold text-yellow-900 text-center">
-              {currentStep.question}
-            </p>
-          </div>
-
-          {/* Hint (if needed) */}
-          {showHint && (
-            <Alert className="bg-amber-50 border-amber-300 mb-6">
-              <HelpCircle className="h-5 w-5 text-amber-600" />
-              <AlertDescription className="text-amber-800 ml-3">
-                <strong>Hint:</strong> Let me show you: {currentProblem.ones} + {currentProblem.addOnes} on a visual block might help visualize the combining.
-              </AlertDescription>
-            </Alert>
-          )}
-
-          {/* Answer Input */}
-          <div className="flex gap-4 mb-6">
-            <input
-              type="number"
-              value={userAnswer}
-              onChange={(e) => setUserAnswer(e.target.value)}
-              onKeyPress={(e) => e.key === 'Enter' && handleSubmitStep()}
-              placeholder="Type your answer..."
-              className="flex-1 px-4 py-3 border-2 border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 text-xl font-semibold"
-              autoFocus
-            />
-            <Button
-              onClick={handleSubmitStep}
-              className="bg-green-600 hover:bg-green-700 px-8 font-semibold"
-            >
-              <ChevronRight className="w-5 h-5" />
-              Check
-            </Button>
-          </div>
-
-          {/* Feedback */}
-          {feedback && (
-            <div className={`text-center text-lg font-bold p-4 rounded-lg ${
-              feedback.includes('✅')
-                ? 'bg-green-100 text-green-700'
-                : feedback.includes('🎉')
-                ? 'bg-blue-100 text-blue-700'
-                : 'bg-orange-100 text-orange-700'
-            }`}>
-              {feedback}
-            </div>
-          )}
-        </Card>
-
-        {/* Settings */}
-        <Card className="p-6 bg-white shadow-lg">
+        <Card className="bg-white border border-slate-200 p-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <p className="text-sm text-gray-600 mb-2">Difficulty</p>
+              <p className="text-sm text-slate-600 mb-2">Difficulty</p>
               <select
                 value={difficulty}
                 onChange={(e) => setDifficulty(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                className="w-full px-3 py-2 border border-slate-300 rounded-lg bg-white"
               >
                 <option value="beginner">Beginner</option>
                 <option value="intermediate">Intermediate</option>
@@ -410,18 +410,17 @@ export default function GuidedStepPractice() {
               </select>
             </div>
             <div>
-              <p className="text-sm text-gray-600 mb-2">Support Level</p>
-              <div className="px-3 py-2 bg-blue-100 rounded-lg font-semibold text-blue-700 capitalize">
+              <p className="text-sm text-slate-600 mb-2">Support Level</p>
+              <div className="px-3 py-2 bg-slate-100 rounded-lg font-semibold text-slate-700 capitalize">
                 {scaffoldLevel === 1 ? 'Minimal' : scaffoldLevel === 2 ? 'Moderate' : 'Full Support'}
               </div>
             </div>
           </div>
         </Card>
 
-        {/* Tips */}
-        <Card className="p-6 bg-green-50 border-2 border-green-200">
-          <h3 className="font-bold text-green-900 mb-3">💡 Step-by-Step Benefits:</h3>
-          <ul className="space-y-2 text-green-800 text-sm">
+        <Card className="p-5 bg-amber-50 border border-amber-200">
+          <h3 className="font-bold text-amber-900 mb-3">Step-by-Step Benefits</h3>
+          <ul className="space-y-2 text-amber-800 text-sm">
             <li>✓ Breaks big problems into small, manageable pieces</li>
             <li>✓ Reduces working memory overload</li>
             <li>✓ Builds confidence through success at each step</li>
