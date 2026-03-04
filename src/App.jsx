@@ -64,6 +64,15 @@ import HapticPacer from "./pages/dyspraxia/HapticPacer";
 import ARInstructionCards from "./pages/dyspraxia/ARInstructionCards";
 import SafeRoutePlanner from "./pages/dyspraxia/SafeRoutePlanner";
 
+// ── Depression ─────────────────────────────
+import DepressionDashboard from "./pages/depression/DepressionDashboard";
+import MVHProtocol from "./pages/depression/MVHProtocol";
+import AnxietyDissolver from "./pages/depression/AnxietyDissolver";
+import SocialBroadcaster from "./pages/depression/SocialBroadcaster";
+import EvidenceFolder from "./pages/depression/EvidenceFolder";
+import CognitiveReframer from "./pages/depression/CognitiveReframer";
+import VoidWhisper from "./pages/depression/VoidWhisper";
+
 const queryClient = new QueryClient();
 
 /* =====================================================
@@ -176,6 +185,7 @@ function ShellRoutes() {
             </ProtectedRoute>
           }
         />
+
         <Route
           path="/dyslexia"
           element={
@@ -224,6 +234,7 @@ function ShellRoutes() {
             </ProtectedRoute>
           }
         />
+
         <Route
           path="/dyscalculia"
           element={
@@ -272,6 +283,7 @@ function ShellRoutes() {
             </ProtectedRoute>
           }
         />
+
         <Route
           path="/ocd"
           element={
@@ -312,6 +324,7 @@ function ShellRoutes() {
             </ProtectedRoute>
           }
         />
+
         <Route
           path="/dyspraxia"
           element={
@@ -352,6 +365,65 @@ function ShellRoutes() {
             </ProtectedRoute>
           }
         />
+
+        {/* Depression */}
+        <Route
+          path="/depression"
+          element={
+            <ProtectedRoute feature={FEATURES.DEPRESSION}>
+              <DepressionDashboard />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/depression/mvh"
+          element={
+            <ProtectedRoute feature={FEATURES.DEPRESSION_MVH}>
+              <MVHProtocol />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/depression/anxietydissolver"
+          element={
+            <ProtectedRoute feature={FEATURES.DEPRESSION_ANXIETY_DISSOLVER}>
+              <AnxietyDissolver />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/depression/social"
+          element={
+            <ProtectedRoute feature={FEATURES.DEPRESSION_SOCIAL}>
+              <SocialBroadcaster />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/depression/proof"
+          element={
+            <ProtectedRoute feature={FEATURES.DEPRESSION_PROOF}>
+              <EvidenceFolder />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/depression/reality"
+          element={
+            <ProtectedRoute feature={FEATURES.DEPRESSION_REALITY}>
+              <CognitiveReframer />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/depression/void"
+          element={
+            <ProtectedRoute feature={FEATURES.DEPRESSION_VOID}>
+              <VoidWhisper />
+            </ProtectedRoute>
+          }
+        />
+
         <Route
           path="/anxiety"
           element={
