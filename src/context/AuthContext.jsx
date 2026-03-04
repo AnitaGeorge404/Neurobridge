@@ -28,6 +28,58 @@ export const CARE_LINK_REGISTRY = {
   "CL-MEERA-0011": "nb-user-011",
   "CL-RIYA-0088": "nb-user-088",
 };
+const ASD_WARD_SETTINGS_PREFIX = "nb_asd_ward_settings_";
+
+function resolveWardIdFromUser(user) {
+  if (!user) return null;
+  if (typeof user.id === "string" && user.id.startsWith("nb-user-")) {
+    return user.id;
+  }
+  const careLinkId = String(user?.careLinkId || "").toUpperCase().trim();
+  if (careLinkId && CARE_LINK_REGISTRY[careLinkId]) {
+    return CARE_LINK_REGISTRY[careLinkId];
+  }
+  const email = String(user?.email || "").toLowerCase();
+  if (email.includes("riya")) return "nb-user-088";
+  if (email.includes("arun")) return "nb-user-042";
+  if (email.includes("meera")) return "nb-user-011";
+  return null;
+}
+
+function syncWardSettingsFromUser(user, patch = {}) {
+  if (!user || user.role !== "user") return;
+  const wardId = resolveWardIdFromUser(user);
+  if (!wardId) return;
+
+  const key = `${ASD_WARD_SETTINGS_PREFIX}${wardId}`;
+  let existing = {};
+  try {
+    existing = JSON.parse(localStorage.getItem(key) || "{}");
+  } catch {
+    existing = {};
+  }
+
+  const disorders = Array.isArray(patch.disorders)
+    ? patch.disorders
+    : Array.isArray(user.disorders)
+    ? user.disorders
+    : existing.disorders || [];
+
+  const privacy = patch.privacy
+    ? { ...(existing.privacy || {}), ...patch.privacy }
+    : user.privacy
+    ? { ...(existing.privacy || {}), ...user.privacy }
+    : existing.privacy || { shareActivity: true, shareJournal: false, shareAlerts: true };
+
+  localStorage.setItem(
+    key,
+    JSON.stringify({
+      ...existing,
+      disorders,
+      privacy,
+    }),
+  );
+}
 
 const MOCK_USERS = {
   admin: {
@@ -358,6 +410,7 @@ export function AuthProvider({ children }) {
 
         const fullUser = { ...mockUser, ...persisted, _supabase: false };
         localStorage.setItem("nb_auth", JSON.stringify(fullUser));
+        syncWardSettingsFromUser(fullUser);
         setUser(fullUser);
         setIsAuthenticated(true);
         resolve(fullUser);
@@ -428,6 +481,7 @@ export function AuthProvider({ children }) {
       const updated = { ...prev, ...patch };
       localStorage.setItem("nb_auth", JSON.stringify(updated));
       localStorage.setItem(`nb_prefs_${prev.id}`, JSON.stringify(patch));
+      syncWardSettingsFromUser(updated, patch);
       return updated;
     });
   }, []);
@@ -442,6 +496,7 @@ export function AuthProvider({ children }) {
         const updated = { ...prev, disorders: newDisorders };
         localStorage.setItem("nb_auth", JSON.stringify(updated));
         localStorage.setItem(`nb_prefs_${prev.id}`, JSON.stringify({ disorders: newDisorders }));
+        syncWardSettingsFromUser(updated, { disorders: newDisorders });
         resolve(updated);
         return updated;
       });
