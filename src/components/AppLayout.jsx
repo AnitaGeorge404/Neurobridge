@@ -17,7 +17,7 @@ const USER_NAV = [
   { title: "Dyspraxia",   path: "/dyspraxia",   icon: Hand,       featureKey: FEATURES.DYSPRAXIA },
   { title: "APD",         path: "/apd",         icon: Ear,        featureKey: FEATURES.APD },
   { title: "Anxiety",     path: "/anxiety",     icon: Wind,       featureKey: FEATURES.ANXIETY },
-  { title: "Tourette's",  path: "/tourettes",   icon: Sparkles,   featureKey: FEATURES.TOURETTES },
+  { title: "Depression",  path: "/depression",   icon: Sparkles,   featureKey: FEATURES.DEPRESSION },
 ];
 
 const ADMIN_NAV = [

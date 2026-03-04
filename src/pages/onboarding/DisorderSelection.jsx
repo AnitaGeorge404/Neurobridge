@@ -1,13 +1,12 @@
 /**
- * DisorderSelection.jsx  —  Post-login onboarding step.
+ * DisorderSelection.jsx  —  Post-login disorder review & update screen.
  *
- * Shown once when a new user has no disorders selected yet.
- * After saving, the app computes enabled features and the user never
- * sees this page again unless they reset via Settings.
+ * Shown on EVERY login so users can review and adjust the areas they want
+ * support with before entering the app.  Pre-filled with their current plan.
  *
  * Clinical safety rules:
  *  • Language never says "you HAVE X disorder"
- *  • Phrasing: "select the areas you'd like support with"
+ *  • Phrasing: "select the areas you’d like support with"
  *  • No diagnosis reinforcement
  *  • "Not sure" option → gets a balanced default set
  */
@@ -20,9 +19,10 @@ import { useAuth } from "@/context/AuthContext";
 import { ALL_DISORDERS, DISORDER_META } from "@/lib/disorders";
 
 export default function DisorderSelection() {
-  const { updateDisorders } = useAuth();
+  const { updateDisorders, disorders: savedDisorders } = useAuth();
   const navigate = useNavigate();
-  const [selected, setSelected] = useState(new Set());
+  // Pre-fill with whatever the user already had saved
+  const [selected, setSelected] = useState(() => new Set(savedDisorders ?? []));
   const [saving, setSaving]     = useState(false);
 
   function toggle(disorder) {
@@ -62,11 +62,15 @@ export default function DisorderSelection() {
           <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-primary/10 mb-4">
             <Brain className="w-7 h-7 text-primary" />
           </div>
-          <h1 className="text-2xl font-bold text-gray-900">Personalise your experience</h1>
+          <h1 className="text-2xl font-bold text-gray-900">Your support plan</h1>
           <p className="mt-2 text-gray-500 text-sm max-w-md mx-auto">
-            Select the areas you'd like support with. Your plan will only show tools
-            relevant to you — nothing unnecessary.
+            Select the areas you’d like support with today. Your sidebar and home screen will show only these tools.
           </p>
+          {savedDisorders?.length > 0 && (
+            <p className="mt-1 text-xs text-primary font-medium">
+              Previously selected: {savedDisorders.length} area{savedDisorders.length > 1 ? "s" : ""} — adjust freely and hit Continue.
+            </p>
+          )}
         </div>
 
         {/* Disorder grid */}

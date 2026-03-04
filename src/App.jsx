@@ -2,7 +2,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/context/AuthContext";
 import { FEATURES } from "@/lib/featureRegistry";
 import AppLayout from "@/components/AppLayout";
@@ -11,7 +11,7 @@ import ProtectedRoute from "@/components/ProtectedRoute";
 // ── Onboarding ─────────────────────────────
 import DisorderSelection from "./pages/onboarding/DisorderSelection";
 
-// ── Pages ────────────────────────────────────
+// ── Pages ───────────────────────────────────
 import Login from "./pages/Login";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
@@ -19,19 +19,19 @@ import AdminDashboard from "./pages/admin/AdminDashboard";
 import UserSettings from "./pages/user/UserSettings";
 import GuardianDashboard from "./pages/guardian/GuardianDashboard";
 
-// ── ASD ──────────────────────────────────────
+// ── ASD ─────────────────────────────────────
 import ASDPage from "./pages/ASDPage";
 
-// ── ADHD ─────────────────────────────────────
+// ── ADHD ────────────────────────────────────
 import ADHDDashboard from "./pages/adhd/ADHDDashboard";
 import EmotionCoach from "./pages/adhd/EmotionCoach";
 import VisualTimeline from "./pages/adhd/VisualTimeline";
 import TaskBreakdown from "./pages/adhd/TaskBreakdown";
 import FocusSessions from "./pages/adhd/FocusSessions";
-import Soundscapes from "./pages/adhd/Soundscapes";
+import Soundscapes from "./pages/adhd/SoundScapes";
 import BodyDoubling from "./pages/adhd/BodyDoubling";
 
-// ── Dyslexia ─────────────────────────────────
+// ── Dyslexia ────────────────────────────────
 import DyslexiaPage from "./pages/DyslexiaPage";
 import AdaptiveReadingIntelligence from "./pages/dyslexia/AdaptiveReadingIntelligence";
 import PhonologicalTrainingGenerator from "./pages/dyslexia/PhonologicalTrainingGenerator";
@@ -51,14 +51,14 @@ import PatternRecognitionTrainer from "./pages/dyscalculia/PatternRecognitionTra
 import AnxietyPage from "./pages/AnxietyPage";
 import TourettesPage from "./pages/TourettesPage";
 
-// ── OCD ──────────────────────────────────────
+// ── OCD ─────────────────────────────────────
 import OCDDashboard from "./pages/ocd/OCDDashboard";
 import ERPHierarchy from "./pages/ocd/ERPHierarchy";
 import RitualDelayer from "./pages/ocd/RitualDelayer";
 import CompulsionHeatmap from "./pages/ocd/CompulsionHeatmap";
 import LogicCheckJournal from "./pages/ocd/LogicCheckJournal";
 
-// ── Dyspraxia ────────────────────────────────
+// ── Dyspraxia ───────────────────────────────
 import DyspraxiaDashboard from "./pages/dyspraxia/DyspraxiaDashboard";
 import AOMILibrary from "./pages/dyspraxia/AOMILibrary";
 import HapticPacer from "./pages/dyspraxia/HapticPacer";
@@ -67,10 +67,9 @@ import SafeRoutePlanner from "./pages/dyspraxia/SafeRoutePlanner";
 
 const queryClient = new QueryClient();
 
-// ─────────────────────────────────────────────
-//  ShellRoutes — all routes rendered inside the
-//  AppLayout sidebar shell (auth-protected)
-// ─────────────────────────────────────────────
+/* =====================================================
+   Shell Routes
+===================================================== */
 function ShellRoutes() {
   return (
     <AppLayout>
@@ -377,9 +376,9 @@ function ShellRoutes() {
   );
 }
 
-// ─────────────────────────────────────────────
-//  App root
-// ─────────────────────────────────────────────
+/* =====================================================
+   App Root
+===================================================== */
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <AuthProvider>
@@ -391,7 +390,6 @@ const App = () => (
             {/* Public — no layout, no auth required */}
             <Route path="/login" element={<Login />} />
 
-            {/* Onboarding — auth required, its own minimal layout */}
             <Route
               path="/onboarding/disorders"
               element={
@@ -401,7 +399,6 @@ const App = () => (
               }
             />
 
-            {/* Everything else goes through the sidebar shell */}
             <Route path="/*" element={<ShellRoutes />} />
           </Routes>
         </BrowserRouter>

@@ -15,34 +15,47 @@ const tools = [
 
 export default function ADHDDashboard() {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 to-blue-50 p-8">
-      <div className="max-w-4xl mx-auto text-center mb-16">
-        <Zap className="w-20 h-20 text-purple-600 mx-auto mb-6" />
-        <h1 className="text-5xl font-bold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent mb-4">
-          FocusForge ADHD Hub
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-[hsl(174_60%_40%)]/5 to-blue-50 p-8">
+      <div className="max-w-5xl mx-auto text-center mb-16">
+        <div className="w-24 h-24 mx-auto mb-6 rounded-3xl bg-gradient-to-br from-[hsl(174_60%_40%)] to-[hsl(174_60%_45%)] flex items-center justify-center shadow-2xl">
+          <Zap className="w-12 h-12 text-white drop-shadow-lg" />
+        </div>
+        <h1 className="text-4xl md:text-5xl font-black bg-gradient-to-r from-[hsl(174_60%_40%)] via-[hsl(174_60%_45%)] to-blue-600 bg-clip-text text-transparent mb-3">
+          ADHD Hub
         </h1>
-        <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-          6 neurodivergent supertools for executive function, focus, sleep, emotion, and motivation.
+        <p className="text-base md:text-lg text-gray-600 max-w-2xl mx-auto">
+          6 neurodivergent supertools to outsource executive function and make focus, time, and emotion feel less hostile.
         </p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {tools.map(({ to, title, desc }) => (
-          <Link
-            key={to}
-            to={to}
-            className="group bg-white/70 backdrop-blur-md hover:bg-white hover:shadow-2xl border border-white/50 rounded-3xl p-8 text-center transition-all duration-300 hover:-translate-y-2 hover:scale-[1.02]"
-          >
-            <div className="text-4xl mb-4">{title.split(' ')[0]}</div>
-            <h3 className="text-2xl font-bold text-gray-800 mb-3 group-hover:text-purple-600">
-              {title.split(' ').slice(1).join(' ')}
-            </h3>
-            <p className="text-gray-600 mb-6">{desc}</p>
-            <span className="inline-block bg-gradient-to-r from-purple-500 to-blue-500 text-white px-6 py-3 rounded-full font-medium text-sm tracking-wide">
-              Launch Tool →
-            </span>
-          </Link>
-        ))}
+      <div className="max-w-5xl mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {tools.map(({ to, title, desc }) => {
+          const emoji = title.split(' ')[0];
+          const label = title.split(' ').slice(1).join(' ');
+          return (
+            <Link
+              key={to}
+              to={to}
+              className="group relative bg-white/80 backdrop-blur-md border border-white/70 rounded-3xl p-7 flex flex-col items-start gap-4 shadow-lg hover:shadow-2xl hover:-translate-y-2 hover:scale-[1.01] transition-all duration-300 overflow-hidden"
+            >
+              <div className="absolute -top-10 -right-10 w-28 h-28 bg-[hsl(174_60%_40%)]/10 rounded-full blur-2xl group-hover:scale-110 transition-transform duration-500" />
+              <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-[hsl(174_60%_40%)]/15 to-[hsl(174_60%_45%)]/10 flex items-center justify-center text-2xl">
+                {emoji}
+              </div>
+              <div className="space-y-1">
+                <h3 className="text-xl font-bold text-gray-900 group-hover:text-[hsl(174_60%_40%)] transition-colors">
+                  {label}
+                </h3>
+                <p className="text-sm text-gray-600">
+                  {desc}
+                </p>
+              </div>
+              <div className="mt-4 inline-flex items-center gap-2 bg-gradient-to-r from-[hsl(174_60%_40%)] to-[hsl(174_60%_45%)] text-white px-4 py-2 rounded-2xl text-xs font-semibold tracking-wide shadow-md group-hover:shadow-lg group-hover:translate-y-[-1px] transition-all">
+                Launch Tool →
+              </div>
+            </Link>
+          );
+        })}
       </div>
     </div>
   );

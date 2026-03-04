@@ -305,12 +305,21 @@ export default function MindfulnessInterruptions({ onSessionComplete }) {
             <BreathRing phase={phase} elapsed={elapsed} sessionType={selected} />
           </div>
           {selected.scripts && (
-            <AnimatePresence mode="wait">
-              <motion.div key={scriptIdx} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }}
-                className="rounded-lg bg-white border border-gray-200 p-3 text-sm text-gray-700 text-center leading-relaxed italic">
-                "{selected.scripts[scriptIdx]}"
-              </motion.div>
-            </AnimatePresence>
+            <div className="space-y-2">
+              <AnimatePresence mode="wait">
+                <motion.div key={scriptIdx} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }}
+                  className="rounded-lg bg-white border border-gray-200 p-3 text-sm text-gray-700 text-center leading-relaxed italic">
+                  "{selected.scripts[scriptIdx]}"
+                </motion.div>
+              </AnimatePresence>
+              <button
+                onClick={() => {
+                  if (selected?.scripts?.[scriptIdx]) speak(selected.scripts[scriptIdx]);
+                }}
+                className="flex items-center gap-1.5 mx-auto text-[11px] text-gray-400 hover:text-gray-600 transition-colors">
+                <span>🔁</span> Replay prompt
+              </button>
+            </div>
           )}
           <div className="flex gap-2">
             <button onClick={() => setIsPaused((p) => !p)}
@@ -335,7 +344,28 @@ export default function MindfulnessInterruptions({ onSessionComplete }) {
           </div>
           <MoodPicker value={postMood} onChange={setPostMood} label="Mood now" />
           {postMood > preMood && <p className="text-xs text-emerald-600">+{postMood - preMood} mood lift. That matters.</p>}
-          {postMood <= preMood && <p className="text-xs text-gray-500">No mood change is also data. Keep practising.</p>}
+          {postMood <= preMood && (
+            <div className="space-y-2">
+              <p className="text-xs text-gray-500">No mood change is also data. Keep practising.</p>
+              {/* Suggest an alternative session type */}
+              {(() => {
+                const alt = SESSION_TYPES.find((t) => t.key !== selected?.key);
+                return alt ? (
+                  <div className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 flex items-center justify-between gap-3">
+                    <div>
+                      <p className="text-[11px] font-semibold text-amber-700">Try a different approach?</p>
+                      <p className="text-[11px] text-gray-500 mt-0.5">{alt.label} — {alt.description.slice(0, 55)}…</p>
+                    </div>
+                    <button
+                      onClick={() => { saveRun(); setTimeout(() => selectType(alt), 200); }}
+                      className="shrink-0 rounded-md bg-amber-100 border border-amber-200 px-2.5 py-1.5 text-[11px] font-semibold text-amber-800 hover:bg-amber-200 transition-colors">
+                      Try
+                    </button>
+                  </div>
+                ) : null;
+              })()}
+            </div>
+          )}
           <button onClick={saveRun} className="w-full rounded-lg bg-emerald-600 py-2.5 text-sm font-semibold text-white hover:bg-emerald-500 transition-colors">
             Save & Return
           </button>
