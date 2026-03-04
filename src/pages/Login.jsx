@@ -74,7 +74,7 @@ export default function Login() {
 
   function getRedirectPath(user) {
     if (user.role === "admin") return "/admin";
-    if (user.role === "guardian") return "/guardian-dashboard";
+    if (user.role === "guardian") return "/asd";
     // Always show disorder selection on every login so users can review/update
     // their plan before entering the app.
     return "/onboarding/disorders";
@@ -91,6 +91,8 @@ export default function Login() {
       if (!accountKey) {
         if (normalizedEmail.includes("neha") || normalizedCareLink === "CL-RIYA-0088") accountKey = "guardian_asd_anxiety";
         else if (normalizedEmail.includes("riya")) accountKey = role === "guardian" ? "guardian_asd_anxiety" : "user_asd_anxiety";
+        else if (role === "user") accountKey = "user_asd_anxiety";
+        else if (role === "guardian") accountKey = "guardian_asd_anxiety";
         else accountKey = role;
       }
       const user = await login(role, { ...options, accountKey });
@@ -137,13 +139,29 @@ export default function Login() {
         navigate(getRedirectPath(user), { replace: true });
       } catch (e) {
         const msg = e.message || "";
-        // Check if Supabase is unreachable (paused project = CORS/network failure)
+        const mappedDemo = inferDemoAccountByEmail(email, careLinkId);
+        // If Supabase is unreachable, still attempt mapped demo fallback first.
         if (msg.toLowerCase().includes("networkerror") || msg.toLowerCase().includes("fetch")) {
+          if (mappedDemo) {
+            try {
+              const demoUser = await login(mappedDemo.role, {
+                email,
+                careLinkId,
+                accountKey: mappedDemo.accountKey,
+              });
+              navigate(getRedirectPath(demoUser), { replace: true });
+              return;
+            } catch {
+              setError("Cannot reach the server and demo fallback could not be loaded.");
+              return;
+            }
+          }
+
           setError("Cannot reach the server — the Supabase project may be paused. Restore it at supabase.com/dashboard, or use Demo Access below.");
           setLoadingRole(null);
           return;
         }
-        const mappedDemo = inferDemoAccountByEmail(email, careLinkId);
+
         if (mappedDemo) {
           try {
             const demoUser = await login(mappedDemo.role, {

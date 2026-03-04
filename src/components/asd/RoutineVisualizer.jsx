@@ -37,7 +37,7 @@ export default function RoutineVisualizer({
           <Clock3 size={18} /> Routine Visualizer
         </CardTitle>
         <CardDescription>
-          View your routine timeline and mark progress. Guardians can add tasks.
+          View your routine timeline and mark progress. Task management is guardian-only.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">

@@ -8,7 +8,7 @@ import { Slider } from "@/components/ui/slider";
 import { Settings2, Sun, Volume2, Zap } from "lucide-react";
 
 export default function SensoryMonitor({ role, profile, loading, onSaveThresholds }) {
-  const canEditThresholds = role === "guardian";
+  const canEditThresholds = role === "guardian" || role === "admin";
 
   const [sound, setSound] = useState(profile?.sound_threshold ?? 60);
   const [light, setLight] = useState(profile?.light_threshold ?? 60);

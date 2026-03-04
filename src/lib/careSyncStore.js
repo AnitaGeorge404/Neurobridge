@@ -36,7 +36,8 @@ export function pushWardActivity(wardId, { event, type = "neutral" }) {
 	saveList(key, next);
 }
 
-export function pushWardAlert(wardId, { message, level = "medium", resolved = false }) {
+export function pushWardAlert(wardId, payload = {}) {
+	const { message, level = "medium", resolved = false, ...meta } = payload;
 	if (!wardId || !message) return;
 	const key = `${ALERT_KEY_PREFIX}${wardId}`;
 	const existing = loadList(key);
@@ -47,6 +48,7 @@ export function pushWardAlert(wardId, { message, level = "medium", resolved = fa
 			level,
 			message,
 			resolved,
+			...meta,
 			created_at: new Date().toISOString(),
 		},
 		...existing,

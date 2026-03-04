@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -8,6 +8,7 @@ import {
 } from "lucide-react";
 import { useAuth, MOCK_WARD_ACTIVITY } from "@/context/AuthContext";
 import { loadWardTasks, saveWardTasks } from "@/lib/wardTaskStore";
+import { loadWardSyncData, pushWardActivity, pushWardAlert } from "@/lib/careSyncStore";
 
 // ─────────────────────────────────────────────
 //  Palette helpers (lavender / slate)
@@ -34,6 +35,24 @@ const ALERT_LEVELS = {
   medium: { cls: "bg-amber-500/10 border-amber-400/30 text-amber-400", label: "Medium" },
   low:    { cls: "bg-sky-500/10 border-sky-400/30 text-sky-400",    label: "Low" },
 };
+const RUNTIME_SYNC_WARD_KEY = "nb_runtime_sync_ward_id";
+
+function readRuntimeSyncWardId() {
+  try {
+    const value = localStorage.getItem(RUNTIME_SYNC_WARD_KEY);
+    return value && value.startsWith("nb-user-") ? value : null;
+  } catch {
+    return null;
+  }
+}
+
+function writeRuntimeSyncWardId(wardId) {
+  if (!wardId || !String(wardId).startsWith("nb-user-")) return;
+  try {
+    localStorage.setItem(RUNTIME_SYNC_WARD_KEY, wardId);
+  } catch {
+  }
+}
 
 // ─────────────────────────────────────────────
 //  Card-flip wrapper
@@ -191,7 +210,28 @@ function WardCard({ wardId, onFlip }) {
 export default function GuardianDashboard() {
   const { user, logout, postGuardianNote } = useAuth();
   const navigate = useNavigate();
-  const wardIds = user?.linkedWardIds ?? [];
+
+  const wardIds = useMemo(() => {
+    const raw = Array.isArray(user?.linkedWardIds) ? user.linkedWardIds : [];
+    const normalized = raw
+      .map((id) => {
+        const value = String(id || "").trim();
+        return value.startsWith("nb-user-") ? value : null;
+      })
+      .filter(Boolean);
+
+    if (normalized.length > 0) {
+      return [...new Set(normalized)];
+    }
+
+    const email = String(user?.email || "").toLowerCase();
+    if (email.includes("neha") || email.includes("riya") || user?.id === "nb-guardian-088") {
+      return ["nb-user-088"];
+    }
+
+    return ["nb-user-088"];
+  }, [user?.linkedWardIds, user?.email, user?.id]);
+  const [syncWardId, setSyncWardId] = useState(() => readRuntimeSyncWardId() || wardIds[0] || "nb-user-088");
 
   const [activeTab, setActiveTab] = useState("overview");
   const [flippedWardId, setFlippedWardId] = useState(null);
@@ -204,16 +244,54 @@ export default function GuardianDashboard() {
   const [taskDraft, setTaskDraft] = useState({ title: "", time: "" });
   const [editingTaskId, setEditingTaskId] = useState(null);
   const [editDraft, setEditDraft] = useState({ title: "", time: "" });
-  const allAlerts = wardIds.flatMap(
-    (id) => (MOCK_WARD_ACTIVITY[id]?.alerts ?? []).map((a) => ({ ...a, wardId: id, wardName: MOCK_WARD_ACTIVITY[id]?.name }))
+  const syncedWardData = useMemo(
+    () =>
+      wardIds.reduce((acc, id) => {
+        acc[id] = loadWardSyncData(id, MOCK_WARD_ACTIVITY[id] ?? {});
+        return acc;
+      }, {}),
+    [wardIds, activeTab],
   );
-  const allNotes = wardIds.flatMap(
-    (id) => (MOCK_WARD_ACTIVITY[id]?.journalNotes ?? []).map((n) => ({ ...n, wardId: id, wardName: MOCK_WARD_ACTIVITY[id]?.name }))
+
+  const allAlerts = wardIds.flatMap((id) =>
+    (syncedWardData[id]?.alerts ?? []).map((a) => ({ ...a, wardId: id, wardName: syncedWardData[id]?.name || MOCK_WARD_ACTIVITY[id]?.name })),
+  );
+  const guardianVisibleAlerts = allAlerts.filter(
+    (alert) => !(alert?.source === "guardian" && (alert?.kind === "task-update" || alert?.kind === "schedule-change")),
+  );
+  const allNotes = wardIds.flatMap((id) =>
+    (syncedWardData[id]?.journalNotes ?? []).map((n) => ({ ...n, wardId: id, wardName: syncedWardData[id]?.name || MOCK_WARD_ACTIVITY[id]?.name })),
   );
   const activeWardTasks = taskWardId ? tasksByWard[taskWardId] ?? [] : [];
 
+  function setActiveWardId(wardId) {
+    setSyncWardId(wardId);
+    setTaskWardId(wardId);
+    setJournalWardId(wardId);
+    writeRuntimeSyncWardId(wardId);
+  }
+
   useEffect(() => {
     const hydrated = loadWardTasks(wardIds);
+
+    try {
+      const raw = localStorage.getItem("nb_guardian_ward_tasks");
+      const parsed = raw ? JSON.parse(raw) : {};
+      const legacyKeys = Object.keys(parsed || {}).filter((key) => !String(key).startsWith("nb-user-"));
+      if (wardIds.length > 0 && legacyKeys.length > 0) {
+        const firstWard = wardIds[0];
+        const existing = hydrated[firstWard] || [];
+        if (existing.length === 0) {
+          const legacyTasks = parsed[legacyKeys[0]];
+          if (Array.isArray(legacyTasks) && legacyTasks.length > 0) {
+            hydrated[firstWard] = legacyTasks;
+            saveWardTasks(hydrated);
+          }
+        }
+      }
+    } catch {
+    }
+
     setTasksByWard(hydrated);
 
     if (wardIds.length === 0) {
@@ -222,13 +300,20 @@ export default function GuardianDashboard() {
       return;
     }
 
-    if (!wardIds.includes(journalWardId)) {
-      setJournalWardId(wardIds[0]);
+    const runtimeWard = readRuntimeSyncWardId();
+    const preferredWard = wardIds.includes(runtimeWard) ? runtimeWard : wardIds[0];
+
+    if (syncWardId !== preferredWard) {
+      setSyncWardId(preferredWard);
     }
-    if (!wardIds.includes(taskWardId)) {
-      setTaskWardId(wardIds[0]);
+    if (!wardIds.includes(journalWardId) || journalWardId !== preferredWard) {
+      setJournalWardId(preferredWard);
     }
-  }, [user?.id]);
+    if (!wardIds.includes(taskWardId) || taskWardId !== preferredWard) {
+      setTaskWardId(preferredWard);
+    }
+    writeRuntimeSyncWardId(preferredWard);
+  }, [user?.id, wardIds]);
 
   async function handleSendNote() {
     if (!journalText.trim() || !journalWardId) return;
@@ -261,13 +346,36 @@ export default function GuardianDashboard() {
       done: false,
     };
     updateWardTasks(taskWardId, [task, ...activeWardTasks]);
+    pushWardActivity(taskWardId, {
+      event: `Guardian added task: ${task.title}`,
+      type: "neutral",
+    });
+    pushWardAlert(taskWardId, {
+      level: "low",
+      message: `New task added by guardian: ${task.title}`,
+      source: "guardian",
+      kind: "task-update",
+    });
     setTaskDraft({ title: "", time: "" });
   }
 
   function handleDeleteTask(taskId) {
     if (!taskWardId) return;
+    const deleted = activeWardTasks.find((task) => task.id === taskId);
     const filtered = activeWardTasks.filter((task) => task.id !== taskId);
     updateWardTasks(taskWardId, filtered);
+    if (deleted) {
+      pushWardActivity(taskWardId, {
+        event: `Guardian deleted task: ${deleted.title}`,
+        type: "neutral",
+      });
+      pushWardAlert(taskWardId, {
+        level: "medium",
+        message: `Task removed by guardian: ${deleted.title}`,
+        source: "guardian",
+        kind: "task-update",
+      });
+    }
     if (editingTaskId === taskId) {
       setEditingTaskId(null);
       setEditDraft({ title: "", time: "" });
@@ -281,6 +389,7 @@ export default function GuardianDashboard() {
 
   function handleSaveEditTask() {
     if (!taskWardId || !editingTaskId || !editDraft.title.trim()) return;
+    const previous = activeWardTasks.find((task) => task.id === editingTaskId);
     const updated = activeWardTasks.map((task) => {
       if (task.id !== editingTaskId) return task;
       return {
@@ -290,8 +399,33 @@ export default function GuardianDashboard() {
       };
     });
     updateWardTasks(taskWardId, updated);
+    pushWardActivity(taskWardId, {
+      event: `Guardian updated task: ${editDraft.title.trim()}`,
+      type: "neutral",
+    });
+    pushWardAlert(taskWardId, {
+      level: "low",
+      message: `Task updated by guardian: ${previous?.title || "task"} → ${editDraft.title.trim()}`,
+      source: "guardian",
+      kind: "task-update",
+    });
     setEditingTaskId(null);
     setEditDraft({ title: "", time: "" });
+  }
+
+  function handleSimulateScheduleChangeAlert() {
+    if (!taskWardId) return;
+    const wardName = MOCK_WARD_ACTIVITY[taskWardId]?.name || "ward";
+    pushWardActivity(taskWardId, {
+      event: "Guardian simulated a schedule change alert",
+      type: "alert",
+    });
+    pushWardAlert(taskWardId, {
+      level: "high",
+      message: `${wardName}, schedule changed. Check updated routine and use calm-breath mode before transition.`,
+      source: "guardian",
+      kind: "schedule-change",
+    });
   }
 
   const tabs = [
@@ -323,6 +457,7 @@ export default function GuardianDashboard() {
             {" · "}
             <span className="text-violet-500">{wardIds.length} ward{wardIds.length !== 1 ? "s" : ""} linked</span>
           </p>
+          <p className="text-xs text-amber-500 mt-1">Sync Ward Key: {syncWardId || "nb-user-088"}</p>
         </div>
         <button
           onClick={handleLogout}
@@ -399,13 +534,13 @@ export default function GuardianDashboard() {
         <motion.div key="alerts" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-4">
           <SectionTitle icon={Bell} color="text-red-500">Safety &amp; Meltdown Alerts</SectionTitle>
 
-          {allAlerts.length === 0 ? (
+          {guardianVisibleAlerts.length === 0 ? (
             <div className="neuro-card p-8 text-center">
               <CheckCircle2 className="w-8 h-8 text-emerald-400 mx-auto mb-2" />
               <p className="text-sm text-muted-foreground">No alerts right now. Everything looks calm 💚</p>
             </div>
           ) : (
-            allAlerts.map((a) => {
+            guardianVisibleAlerts.map((a) => {
               const lvl = ALERT_LEVELS[a.level] ?? ALERT_LEVELS.low;
               const resolved = resolvedAlerts.includes(a.id) || a.resolved;
               return (
@@ -464,7 +599,7 @@ export default function GuardianDashboard() {
               {wardIds.map((id) => (
                 <button
                   key={id}
-                  onClick={() => setTaskWardId(id)}
+                  onClick={() => setActiveWardId(id)}
                   className={`text-xs px-3 py-1.5 rounded-xl border transition font-medium ${
                     taskWardId === id
                       ? "bg-violet-500/15 border-violet-400/50 text-violet-500"
@@ -500,6 +635,14 @@ export default function GuardianDashboard() {
             >
               <Plus className="w-4 h-4" /> Add Task
             </motion.button>
+
+            <button
+              onClick={handleSimulateScheduleChangeAlert}
+              disabled={!taskWardId}
+              className="text-xs px-3 py-1.5 rounded-xl border border-amber-300/40 text-amber-500 hover:bg-amber-500/10 disabled:opacity-50"
+            >
+              Simulate Schedule Change Alert
+            </button>
           </div>
 
           <div className="space-y-3">
@@ -593,7 +736,7 @@ export default function GuardianDashboard() {
               {wardIds.map((id) => (
                 <button
                   key={id}
-                  onClick={() => setJournalWardId(id)}
+                  onClick={() => setActiveWardId(id)}
                   className={`text-xs px-3 py-1.5 rounded-xl border transition font-medium ${
                     journalWardId === id
                       ? "bg-violet-500/15 border-violet-400/50 text-violet-500"
