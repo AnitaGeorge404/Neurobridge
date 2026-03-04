@@ -1,3 +1,5 @@
+'use client';
+
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Link } from 'react-router-dom';
 
@@ -38,12 +40,12 @@ const TIMER_OPTIONS = [
 
 // map sound id -> audio file URL (you need to provide real files later)
 const SOUND_URLS = {
-  'rain': '/sounds/rain.mp3',
-  'thunder': '/sounds/thunder.mp3',
-  'ocean': '/sounds/ocean.mp3',
-  'wind': '/sounds/wind.mp3',
-  'fire': '/sounds/fireplace.mp3',
-  'forest': '/sounds/forest.mp3',
+  rain: '/sounds/rain.mp3',
+  thunder: '/sounds/thunder.mp3',
+  ocean: '/sounds/ocean.mp3',
+  wind: '/sounds/wind.mp3',
+  fire: '/sounds/fireplace.mp3',
+  forest: '/sounds/forest.mp3',
   'brown-noise': '/sounds/brown-noise.mp3',
   'white-noise': '/sounds/white-noise.mp3',
   'binaural-focus': '/sounds/binaural-focus.mp3',
@@ -549,7 +551,7 @@ const Soundscapes = () => {
             layers.some((l) => String(l.id).startsWith('binaural')) && (
               <div className="text-center animate-slide-up">
                 <p className="text-xs text-muted-foreground/70 italic">
-                  🎧 Binaural beats require headphones for the full effect
+                  🎧 Binaural beats work best with stereo headphones.
                 </p>
               </div>
             )}

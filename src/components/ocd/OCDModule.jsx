@@ -67,7 +67,7 @@ export default function OCDModule() {
             <ERPTracker onSessionLogged={handleDataEvent} />
           )}
           {activeTab === "journal" && (
-            <ThoughtTriggerJournal onEntryAdded={handleDataEvent} />
+            <ThoughtTriggerJournal onEntryAdded={handleDataEvent} onNavigateTo={setActiveTab} />
           )}
           {activeTab === "goals" && (
             <ResponsePreventionGoals onGoalCompleted={handleDataEvent} />

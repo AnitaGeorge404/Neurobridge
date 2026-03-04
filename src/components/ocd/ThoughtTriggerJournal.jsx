@@ -12,8 +12,9 @@
 
 import { useState, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Search, BookOpen, Zap, AlertCircle, Smile, Flame, Plus, X, TrendingUp, Info } from "lucide-react";
+import { Search, BookOpen, Zap, AlertCircle, Smile, Flame, Plus, X, TrendingUp, Info, Wind, Waves, ArrowRight } from "lucide-react";
 import { getJournalEntries, addJournalEntry, inferSubtype, buildWeeklyInsight } from "@/lib/ocdStore";
+import ACTSOSModal from "./ACTSOSModal";
 
 const ENTRY_TYPES = [
   { key: "obsession",       label: "Obsession",       icon: "🔴", color: "bg-red-900/40 border-red-200 text-red-700" },
@@ -58,7 +59,77 @@ function WeeklyInsightPanel({ insight }) {
   );
 }
 
-export default function ThoughtTriggerJournal({ onEntryAdded }) {
+// ─── Act-Now panel shown after high-urgency / obsession entries ──────────────
+function ActNowPanel({ onDismiss, onNavigateTo }) {
+  const [actSosOpen, setActSosOpen] = useState(false);
+  const [breathing, setBreathing]   = useState(false);
+  const [breathStep, setBreathStep] = useState(0);
+
+  // 3-cycle 4-7-8 guidance (inline, no navigation needed)
+  const BREATH_STEPS = [
+    "Inhale slowly for 4...", "Inhale slowly for 4...", "Inhale slowly for 4...", "Inhale slowly for 4...",
+    "Hold for 7...", "Hold for 7...", "Hold for 7...", "Hold for 7...", "Hold for 7...", "Hold for 7...", "Hold for 7...",
+    "Exhale for 8...", "Exhale for 8...", "Exhale for 8...", "Exhale for 8...", "Exhale for 8...", "Exhale for 8...", "Exhale for 8...", "Exhale for 8...",
+  ];
+
+  const startBreathing = () => {
+    setBreathing(true);
+    setBreathStep(0);
+    let step = 0;
+    const tick = setInterval(() => {
+      step++;
+      if (step >= BREATH_STEPS.length) { clearInterval(tick); setBreathing(false); }
+      else setBreathStep(step);
+    }, 1000);
+  };
+
+  return (
+    <>
+      <ACTSOSModal open={actSosOpen} onClose={() => setActSosOpen(false)} />
+      <motion.div
+        initial={{ opacity: 0, y: -6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }}
+        className="rounded-xl border border-rose-200 bg-rose-50 p-4 space-y-3"
+      >
+        <div className="flex items-center justify-between">
+          <p className="text-sm font-semibold text-rose-700">High urgency logged — act now</p>
+          <button onClick={onDismiss} className="text-rose-400 hover:text-rose-600"><X size={14} /></button>
+        </div>
+        <p className="text-xs text-gray-500 leading-relaxed">
+          The urge is peaking. The fastest way to ride it out is to engage your body or mind — not the compulsion.
+        </p>
+
+        {!breathing ? (
+          <div className="flex flex-wrap gap-2">
+            <button onClick={startBreathing}
+              className="flex items-center gap-1.5 rounded-lg bg-sky-100 border border-sky-200 px-3 py-2 text-xs font-semibold text-sky-800 hover:bg-sky-200 transition-colors">
+              <Wind size={12} /> 4-7-8 Breath (19s)
+            </button>
+            <button onClick={() => setActSosOpen(true)}
+              className="flex items-center gap-1.5 rounded-lg bg-violet-100 border border-violet-200 px-3 py-2 text-xs font-semibold text-violet-800 hover:bg-violet-200 transition-colors">
+              🧠 ACT Defusion
+            </button>
+            {onNavigateTo && (
+              <button onClick={() => onNavigateTo("mindful")}
+                className="flex items-center gap-1.5 rounded-lg bg-indigo-100 border border-indigo-200 px-3 py-2 text-xs font-semibold text-indigo-800 hover:bg-indigo-200 transition-colors">
+                <Waves size={12} /> Urge Surfing <ArrowRight size={10} />
+              </button>
+            )}
+          </div>
+        ) : (
+          <AnimatePresence mode="wait">
+            <motion.div key={breathStep}
+              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+              className="flex items-center justify-center rounded-lg bg-sky-100 border border-sky-200 py-3 text-sm font-semibold text-sky-800">
+              {BREATH_STEPS[breathStep]}
+            </motion.div>
+          </AnimatePresence>
+        )}
+      </motion.div>
+    </>
+  );
+}
+
+export default function ThoughtTriggerJournal({ onEntryAdded, onNavigateTo }) {
   const [entries, setEntries] = useState(() => getJournalEntries());
   const [showForm, setShowForm]       = useState(false);
   const [entryType, setEntryType]     = useState("obsession");
@@ -67,6 +138,7 @@ export default function ThoughtTriggerJournal({ onEntryAdded }) {
   const [moodScore, setMoodScore]     = useState(3);
   const [filterType, setFilterType]   = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
+  const [showActNow, setShowActNow]   = useState(false);
 
   const insight = useMemo(() => buildWeeklyInsight(), [entries]);
 
@@ -75,6 +147,10 @@ export default function ThoughtTriggerJournal({ onEntryAdded }) {
     const subtype = inferSubtype(bodyText);
     const entry = addJournalEntry({ type: entryType, body: bodyText.trim(), urgency, moodScore, subtype });
     setEntries(getJournalEntries());
+    // Show act-now panel for high-urgency obsessions & urgency peaks
+    if (urgency === "High" || entryType === "urgency" || entryType === "obsession") {
+      setShowActNow(true);
+    }
     setBodyText(""); setShowForm(false);
     onEntryAdded?.({ type: "journal", subtype, urgency });
   };
@@ -93,6 +169,11 @@ export default function ThoughtTriggerJournal({ onEntryAdded }) {
 
   return (
     <div className="space-y-5 pb-4">
+      <AnimatePresence>
+        {showActNow && (
+          <ActNowPanel onDismiss={() => setShowActNow(false)} onNavigateTo={onNavigateTo} />
+        )}
+      </AnimatePresence>
       {insight.entryCount > 0 && <WeeklyInsightPanel insight={insight} />}
 
       {/* Quick-log strip */}
