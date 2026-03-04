@@ -9,6 +9,7 @@ import {
 import { useAuth, MOCK_WARD_ACTIVITY } from "@/context/AuthContext";
 import { loadWardTasks, saveWardTasks } from "@/lib/wardTaskStore";
 import { loadWardSyncData, pushWardActivity, pushWardAlert } from "@/lib/careSyncStore";
+import AdaptiveOutcomePanel from "@/components/adaptive/AdaptiveOutcomePanel";
 
 // ─────────────────────────────────────────────
 //  Palette helpers (lavender / slate)
@@ -475,6 +476,12 @@ export default function GuardianDashboard() {
           {" "}Your ward controls what data is shared with you. Private journal entries and unshared activities are not visible here. This space is for support, not surveillance.
         </p>
       </div>
+
+      <AdaptiveOutcomePanel
+        targetId={syncWardId || wardIds[0]}
+        title={`Predictive Care Model · ${MOCK_WARD_ACTIVITY[syncWardId || wardIds[0]]?.name || "Ward"}`}
+        compact
+      />
 
       {/* ── Tabs ───────────────────────────── */}
       <div className="flex gap-1 flex-wrap border-b border-border">

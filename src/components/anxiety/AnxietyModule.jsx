@@ -316,7 +316,7 @@ export default function AnxietyModule() {
         </TabsContent>
 
         <TabsContent value="analyzer">
-          <AnalyzerPanel analytics={analytics} />
+          <AnalyzerPanel analytics={analytics} targetId={userId} />
         </TabsContent>
 
         <TabsContent value="reframe">

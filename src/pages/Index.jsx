@@ -2,6 +2,7 @@ import { Link } from "react-router-dom";
 import { Brain, Zap, BookOpen, Calculator, Shield, Hand, Wind, Sparkles, Ear, Settings } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { FEATURES } from "@/lib/featureRegistry";
+import AdaptiveOutcomePanel from "@/components/adaptive/AdaptiveOutcomePanel";
 
 // Each card maps to a top-level feature key so we can filter by disorders.
 const ALL_MODES = [
@@ -17,7 +18,7 @@ const ALL_MODES = [
 ];
 
 const Index = () => {
-  const { hasFeature, role } = useAuth();
+  const { hasFeature, role, user } = useAuth();
 
   // Admins and guardians see all modes; regular users see only their enabled modules.
   const modes = (role === "admin" || role === "guardian")
@@ -36,6 +37,12 @@ const Index = () => {
             : "No tools have been set up yet."}
         </p>
       </div>
+
+      {role === "user" && user?.id && (
+        <div className="mb-6">
+          <AdaptiveOutcomePanel targetId={user.id} title="NeuroAdaptive Forecast" compact />
+        </div>
+      )}
 
       {modes.length > 0 ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
