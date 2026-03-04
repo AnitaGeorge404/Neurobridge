@@ -45,11 +45,19 @@ export default function ProtectedRoute({ children, role, feature }) {
     }
   }
 
-  // First-run onboarding: user has never selected disorders
+  const isOnboardingRoute = location.pathname === "/onboarding/disorders";
+
+  // Demo users: always show module selector every login/session entry.
+  if (userRole === "user" && !user?._supabase && !isOnboardingRoute) {
+    return <Navigate to="/onboarding/disorders" replace />;
+  }
+
+  // Real users: only require onboarding until first successful completion.
   if (
     userRole === "user" &&
-    location.pathname !== "/onboarding/disorders" &&
-    (!user?.disorders || user.disorders.length === 0)
+    user?._supabase &&
+    !isOnboardingRoute &&
+    !user?.onboardingCompleted
   ) {
     return <Navigate to="/onboarding/disorders" replace />;
   }

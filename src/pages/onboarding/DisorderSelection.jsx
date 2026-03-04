@@ -19,7 +19,7 @@ import { useAuth } from "@/context/AuthContext";
 import { ALL_DISORDERS, DISORDER_META } from "@/lib/disorders";
 
 export default function DisorderSelection() {
-  const { updateDisorders, disorders: savedDisorders } = useAuth();
+  const { updateDisorders, updateUser, disorders: savedDisorders } = useAuth();
   const navigate = useNavigate();
   // Pre-fill with whatever the user already had saved
   const [selected, setSelected] = useState(() => new Set(savedDisorders ?? []));
@@ -37,6 +37,7 @@ export default function DisorderSelection() {
     if (selected.size === 0) return;
     setSaving(true);
     await updateDisorders([...selected]);
+    updateUser({ onboardingCompleted: true });
     // Navigate to the first selected module, or home
     const first = [...selected][0];
     const path = DISORDER_META[first]?.path ?? "/";
@@ -47,6 +48,7 @@ export default function DisorderSelection() {
     // Give them a broad cross-disorder default so the app is immediately useful
     setSaving(true);
     await updateDisorders(ALL_DISORDERS);
+    updateUser({ onboardingCompleted: true });
     navigate("/", { replace: true });
   }
 

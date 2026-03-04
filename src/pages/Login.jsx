@@ -3,6 +3,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { Brain, ShieldCheck, User, Heart, Loader2, Eye, EyeOff, Sparkles, Link2, UserPlus, LogIn, MailCheck } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
+import { DISORDER_META } from "@/lib/disorders";
 
 // ─────────────────────────────────────────────
 //  Role definitions for the 3-way toggle
@@ -74,10 +75,13 @@ export default function Login() {
 
   function getRedirectPath(user) {
     if (user.role === "admin") return "/admin";
-    if (user.role === "guardian") return "/asd";
-    // Always show disorder selection on every login so users can review/update
-    // their plan before entering the app.
-    return "/onboarding/disorders";
+    if (user.role === "guardian") return "/guardian-dashboard";
+
+    if (!user?._supabase) return "/onboarding/disorders";
+    if (!user?.onboardingCompleted) return "/onboarding/disorders";
+
+    const firstDisorder = Array.isArray(user?.disorders) ? user.disorders[0] : null;
+    return DISORDER_META[firstDisorder]?.path ?? from ?? "/";
   }
 
   async function handleDemoLogin(role, options = {}) {
