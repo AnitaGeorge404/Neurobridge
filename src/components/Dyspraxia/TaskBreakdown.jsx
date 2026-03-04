@@ -20,7 +20,7 @@
  *  NO STREAKS / COUNTS: Number-heavy UIs become checking targets for OCD users.
  */
 
-import { useMemo, useState, useRef, useCallback } from "react";
+import { useMemo, useState, useRef, useCallback, useEffect } from "react";
 import { createEntry } from "@/lib/moduleApi";
 import styles from "./DyspraxiaModule.module.css";
 
@@ -81,6 +81,14 @@ const INITIAL_TASKS = [
 
 const CHECK_WINDOW_MS  = 5 * 60 * 1000;
 const CHECK_LOCK_LIMIT = 3;
+const WAIT_SUPPORT_DURATION_SEC = 120;
+const WAIT_PROMPTS = [
+  "Take one slow breath and release your shoulders.",
+  "Check posture: both feet grounded, jaw relaxed.",
+  "Name one thing you can smell or hear right now.",
+  "Hands soft, breathing steady — no rush.",
+  "You only need this moment, not the whole task.",
+];
 
 function useCheckLock() {
   const log = useRef({});
@@ -149,6 +157,8 @@ export default function TaskBreakdown() {
   const [undoStack, setUndoStack]       = useState([]);
   const [customStepText, setCustomStepText] = useState("");
   const [visibleStepIdx, setVisibleStepIdx] = useState(0);
+  const [waitingMode, setWaitingMode] = useState(false);
+  const [waitSeconds, setWaitSeconds] = useState(0);
 
   const { lockedStep, recordCheck, unlock } = useCheckLock();
 
@@ -201,6 +211,29 @@ export default function TaskBreakdown() {
   const hasPrev = visibleStepIdx > 0;
   const hasNext = visibleStepIdx < activeTask.steps.length - 1;
 
+  const hasWaitLikeStep = currentStep?.microSteps?.some((ms) => /timer|boil|wait|rest/i.test(ms.label));
+  const waitPromptIdx = Math.floor(waitSeconds / 10) % WAIT_PROMPTS.length;
+  const waitRemaining = Math.max(WAIT_SUPPORT_DURATION_SEC - waitSeconds, 0);
+
+  useEffect(() => {
+    setWaitingMode(false);
+    setWaitSeconds(0);
+  }, [activeTaskId, visibleStepIdx]);
+
+  useEffect(() => {
+    if (!waitingMode) return;
+    const id = setInterval(() => {
+      setWaitSeconds((s) => {
+        if (s + 1 >= WAIT_SUPPORT_DURATION_SEC) {
+          setWaitingMode(false);
+          return WAIT_SUPPORT_DURATION_SEC;
+        }
+        return s + 1;
+      });
+    }, 1000);
+    return () => clearInterval(id);
+  }, [waitingMode]);
+
   return (
     <>
       {lockedStep && <TrustMemoryOverlay onDismiss={unlock} />}
@@ -234,6 +267,29 @@ export default function TaskBreakdown() {
                   parentStep={currentStep.title} checked={checked} onToggle={toggleMicroStep} />
               ))}
             </div>
+
+            {hasWaitLikeStep && (
+              <div className={styles.stepDone} style={{ marginTop: "0.75rem" }}>
+                <p className={styles.stepDoneTitle}>Need to wait? Use guided wait support.</p>
+                {!waitingMode ? (
+                  <div className={styles.stepActions}>
+                    <button className={styles.secondaryButton} onClick={() => setWaitingMode(true)}>
+                      Start 2-minute support
+                    </button>
+                  </div>
+                ) : (
+                  <>
+                    <p className={styles.stepDoneNote}>{WAIT_PROMPTS[waitPromptIdx]}</p>
+                    <p className={styles.helperSmall}>Support timer: {String(Math.floor(waitRemaining / 60)).padStart(2, "0")}:{String(waitRemaining % 60).padStart(2, "0")}</p>
+                    <div className={styles.stepActions}>
+                      <button className={styles.secondaryButton} onClick={() => setWaitingMode(false)}>
+                        End support now
+                      </button>
+                    </div>
+                  </>
+                )}
+              </div>
+            )}
           </article>
         )}
 

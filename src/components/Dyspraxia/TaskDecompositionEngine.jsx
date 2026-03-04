@@ -10,7 +10,7 @@
  *  • No "all-or-nothing" — skipping a step is explicitly allowed
  */
 
-import { useState, useRef, useCallback } from "react";
+import { useState, useRef, useCallback, useEffect } from "react";
 import styles from "./DyspraxiaModule.module.css";
 
 const API_BASE = import.meta.env.VITE_API_BASE ?? "http://localhost:5000";
@@ -19,6 +19,15 @@ const LEVEL_LABELS = {
   anxiety: ["Calm", "Slight worry", "Noticeable", "Anxious", "Very anxious", "High anxiety", "Distressed", "Very distressed", "Overwhelmed", "Extreme"],
   fatigue: ["Energised", "Fresh", "Awake", "Mild tiredness", "Moderately tired", "Tired", "Very tired", "Exhausted", "Drained", "Cannot continue"],
 };
+
+const WAITING_SUPPORT = [
+  "Roll your shoulders once and let them soften.",
+  "Take one slow breath in, then a longer breath out.",
+  "Wiggle your fingers and relax your hands.",
+  "Look around and name two neutral objects.",
+  "Sit back into your chair and feel the support.",
+  "Say: ‘I only need the next small step.’",
+];
 
 function LevelSlider({ id, label, value, onChange }) {
   const descriptor = LEVEL_LABELS[id]?.[value - 1] ?? "";
@@ -170,18 +179,41 @@ function StepReveal({ steps, goal, onRestart }) {
   );
 }
 
+function LoadingSupport({ waitSeconds }) {
+  const idx = Math.floor(waitSeconds / 6) % WAITING_SUPPORT.length;
+  const rotateIn = 6 - (waitSeconds % 6);
+
+  return (
+    <div className={styles.stepDone} role="status" aria-live="polite">
+      <p className={styles.stepDoneTitle}>Preparing your step-by-step plan…</p>
+      <p className={styles.stepDoneNote}>{WAITING_SUPPORT[idx]}</p>
+      <p className={styles.helperSmall}>Next support prompt in {rotateIn}s</p>
+    </div>
+  );
+}
+
 // ─── Main Component ───────────────────────────────────────────────────────────
 export default function TaskDecompositionEngine() {
   const [goal, setGoal]           = useState("");
   const [anxiety, setAnxiety]     = useState(5);
   const [fatigue, setFatigue]     = useState(5);
   const [loading, setLoading]     = useState(false);
+  const [waitSeconds, setWaitSeconds] = useState(0);
   const [steps, setSteps]         = useState(null);
   const [error, setError]         = useState("");
   const [currentGoal, setCurrentGoal] = useState("");
 
   const handleVoiceResult = useCallback((transcript) => setGoal(transcript), []);
   const { isListening, error: voiceError, start: startVoice, stop: stopVoice } = useVoiceInput(handleVoiceResult);
+
+  useEffect(() => {
+    if (!loading) {
+      setWaitSeconds(0);
+      return;
+    }
+    const id = setInterval(() => setWaitSeconds((s) => s + 1), 1000);
+    return () => clearInterval(id);
+  }, [loading]);
 
   async function handleDecompose() {
     const trimmed = goal.trim();
@@ -283,6 +315,8 @@ export default function TaskDecompositionEngine() {
       >
         {loading ? "Breaking it down…" : "Break this down for me"}
       </button>
+
+      {loading && <LoadingSupport waitSeconds={waitSeconds} />}
     </section>
   );
 }

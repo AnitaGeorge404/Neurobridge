@@ -33,9 +33,9 @@ const DIVERT_ACTIVITIES = [
   { icon: "🎨", text: "Mentally redecorate one room in your home however you want." },
 ];
 
-function StayBusyCard({ elapsed, totalSec }) {
+function StayBusyCard({ elapsed, totalSec, rotateSeed, onRotateNow }) {
   // Pick a new activity every 40s so it feels intentional, not distracting
-  const idx = Math.floor(elapsed / 40) % DIVERT_ACTIVITIES.length;
+  const idx = (Math.floor(elapsed / 40) + rotateSeed) % DIVERT_ACTIVITIES.length;
   const activity = DIVERT_ACTIVITIES[idx];
   const nextIn = 40 - (elapsed % 40);
 
@@ -60,6 +60,14 @@ function StayBusyCard({ elapsed, totalSec }) {
           <span className="text-base mr-1.5">{activity.icon}</span>
           {activity.text}
         </p>
+        <div className="flex justify-end">
+          <button
+            onClick={onRotateNow}
+            className="rounded-md border border-indigo-300 bg-white px-2 py-1 text-[11px] text-indigo-700 hover:bg-indigo-100 transition-colors"
+          >
+            Show another idea
+          </button>
+        </div>
       </motion.div>
     </AnimatePresence>
   );
@@ -122,6 +130,7 @@ function GoalCard({ goal, onSuccess, onReset, onEscalate }) {
   const [elapsed, setElapsed]         = useState(0);
   const [done, setDone]               = useState(false);
   const [confetti, setConfetti]       = useState(0);
+  const [rotateSeed, setRotateSeed]   = useState(0);
   const intervalRef = useRef(null);
   const durationSec = goal.delayMinutes * 60;
 
@@ -137,7 +146,7 @@ function GoalCard({ goal, onSuccess, onReset, onEscalate }) {
   }, [timerActive, durationSec]);
 
   const handleSuccess = () => { setConfetti((c) => c + 1); onSuccess(goal.id); setDone(false); setElapsed(0); };
-  const handleReset   = () => { setDone(false); setElapsed(0); setTimerActive(false); onReset(goal.id); };
+  const handleReset   = () => { setDone(false); setElapsed(0); setTimerActive(false); setRotateSeed(0); onReset(goal.id); };
   // Consistency label — qualitative, no numbers visible to user
   const consistency = getConsistencyLabel(goal.streak);
   const escalateTarget = goal.delayMinutes + 1;
@@ -171,7 +180,12 @@ function GoalCard({ goal, onSuccess, onReset, onEscalate }) {
               <p className="text-xs text-teal-700 mt-0.5">Stay with the discomfort. Uncertainty is tolerable.</p>
             </div>
           </div>
-          <StayBusyCard elapsed={elapsed} totalSec={durationSec} />
+          <StayBusyCard
+            elapsed={elapsed}
+            totalSec={durationSec}
+            rotateSeed={rotateSeed}
+            onRotateNow={() => setRotateSeed((s) => s + 1)}
+          />
         </div>
       )}
 
