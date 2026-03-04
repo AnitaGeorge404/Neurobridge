@@ -308,3 +308,421 @@
   border-radius: 12px;
   padding: 0.75rem;
 }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   ACCESSIBILITY LAYER — OCD + DCD intersection
+   • All interactive elements enforce ≥48px touch target (WCAG 2.5.5)
+   • prefers-reduced-motion disables ALL transitions and animations
+   • High-contrast outlines preserved for keyboard users
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* Enforce 48px minimum on every interactive element globally within this module */
+.moduleShell button,
+.moduleShell input[type="range"],
+.moduleShell input[type="checkbox"],
+.moduleShell select {
+  min-height: 48px;
+}
+
+/* Disable all animations/transitions for users who opted out */
+@media (prefers-reduced-motion: reduce) {
+  .moduleShell *,
+  .moduleShell *::before,
+  .moduleShell *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* ─── Trust-your-memory overlay ──────────────────────────────────────────── */
+.trustOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(4px);
+  padding: 1rem;
+}
+
+.trustCard {
+  background: hsl(var(--card));
+  border: 2px solid hsl(var(--border));
+  border-radius: 20px;
+  padding: 2rem 1.5rem;
+  max-width: 420px;
+  width: 100%;
+  display: grid;
+  gap: 0.9rem;
+  text-align: center;
+}
+
+.trustIcon {
+  font-size: 2.8rem;
+  margin: 0;
+}
+
+.trustTitle {
+  font-size: 1.4rem;
+  font-weight: 800;
+  margin: 0;
+  color: hsl(var(--foreground));
+}
+
+.trustBody {
+  margin: 0;
+  color: hsl(var(--muted-foreground));
+  line-height: 1.6;
+  font-size: 0.95rem;
+}
+
+/* ─── JITAI circuit-breaker overlay ─────────────────────────────────────── */
+.jitaiOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9998;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  background: rgba(6, 78, 59, 0.55);
+  backdrop-filter: blur(6px);
+}
+
+.jitaiCard {
+  background: hsl(var(--card));
+  border: 2px solid #10b981;
+  border-radius: 20px;
+  padding: 2rem 1.5rem;
+  max-width: 440px;
+  width: 100%;
+  display: grid;
+  gap: 1rem;
+  text-align: center;
+}
+
+.jitaiHeadline {
+  font-size: 1.25rem;
+  font-weight: 800;
+  margin: 0;
+  color: #065f46;
+}
+
+.jitaiBody {
+  margin: 0;
+  color: hsl(var(--muted-foreground));
+  line-height: 1.65;
+}
+
+.jitaiActions {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+/* ─── Progressive reveal / step navigation ───────────────────────────────── */
+.stepNavRow {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.stepNavCount {
+  flex: 1;
+  text-align: center;
+  font-size: 0.8rem;
+  color: hsl(var(--muted-foreground));
+}
+
+.undoButton {
+  min-height: 48px;
+  border-radius: 14px;
+  border: 2px solid hsl(var(--border));
+  background: transparent;
+  color: hsl(var(--muted-foreground));
+  font-weight: 700;
+  cursor: pointer;
+  padding: 0 1rem;
+  font-size: 0.85rem;
+  transition: background 0.15s;
+}
+.undoButton:hover:not(:disabled) {
+  background: hsl(var(--secondary));
+  color: hsl(var(--foreground));
+}
+.undoButton:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+/* ─── Encouragement text (replaces progress bar) ─────────────────────────── */
+.encourageText,
+.encourageTextDone {
+  margin: 0;
+  font-size: 0.85rem;
+  font-weight: 600;
+  border-radius: 10px;
+  padding: 0.5rem 0.75rem;
+}
+
+.encourageText {
+  background: hsl(var(--mode-dyspraxia) / 0.1);
+  color: hsl(var(--mode-dyspraxia));
+}
+
+.encourageTextDone {
+  background: hsl(var(--success) / 0.12);
+  color: hsl(var(--success));
+}
+
+/* ─── Micro-step card (replaces checkbox list) ────────────────────────────── */
+.microStepCard {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  border: 2px solid hsl(var(--border));
+  border-radius: 14px;
+  padding: 0.6rem 0.9rem;
+  background: hsl(var(--card));
+  transition: border-color 0.15s, background 0.15s;
+  min-height: 56px;
+}
+
+.microStepDone {
+  border-color: hsl(var(--success));
+  background: hsl(var(--success) / 0.07);
+}
+
+.microStepToggle {
+  width: 40px;
+  height: 40px;
+  min-width: 40px;
+  min-height: 40px;
+  border-radius: 50%;
+  border: 2px solid hsl(var(--border));
+  background: hsl(var(--background));
+  font-size: 1.1rem;
+  font-weight: 800;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s, border-color 0.15s;
+  flex-shrink: 0;
+}
+
+.microStepToggleChecked {
+  background: hsl(var(--success));
+  border-color: hsl(var(--success));
+  color: #fff;
+}
+
+.checkMark {
+  pointer-events: none;
+  user-select: none;
+}
+
+.microStepLabel {
+  font-size: 0.95rem;
+  line-height: 1.45;
+}
+
+.microStepLabelDone {
+  text-decoration: line-through;
+  opacity: 0.6;
+}
+
+/* ─── Task Decomposition Engine ──────────────────────────────────────────── */
+.levelSlider {
+  display: grid;
+  gap: 0.4rem;
+}
+
+.levelHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 0.5rem;
+}
+
+.levelDescriptor {
+  font-size: 0.78rem;
+  color: hsl(var(--muted-foreground));
+  font-weight: 600;
+}
+
+.rangeTickRow {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.7rem;
+  color: hsl(var(--muted-foreground));
+}
+
+.voiceRow {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.voiceInputGroup {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.voiceInputGroup .fieldInput {
+  flex: 1;
+}
+
+.micButton,
+.micButtonActive {
+  min-height: 50px;
+  min-width: 112px;
+  border-radius: 14px;
+  border: 2px solid hsl(var(--border));
+  font-weight: 700;
+  cursor: pointer;
+  font-size: 0.85rem;
+  padding: 0 0.85rem;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.micButton {
+  background: hsl(var(--secondary));
+  color: hsl(var(--secondary-foreground));
+}
+
+.micButtonActive {
+  background: #fef2f2;
+  border-color: #f87171;
+  color: #b91c1c;
+}
+
+.stepReveal {
+  display: grid;
+  gap: 1rem;
+}
+
+.stepCounter {
+  margin: 0;
+  font-size: 0.75rem;
+  color: hsl(var(--muted-foreground));
+  text-align: center;
+}
+
+.stepCard {
+  border: 2px solid hsl(var(--mode-dyspraxia));
+  border-radius: 18px;
+  padding: 1.5rem 1.25rem;
+  background: hsl(var(--mode-dyspraxia) / 0.06);
+  text-align: center;
+}
+
+.stepText {
+  margin: 0;
+  font-size: 1.15rem;
+  font-weight: 700;
+  line-height: 1.5;
+  color: hsl(var(--foreground));
+}
+
+.stepActions {
+  display: flex;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+}
+
+.stepEncourage {
+  margin: 0;
+  font-size: 0.78rem;
+  color: hsl(var(--muted-foreground));
+  text-align: center;
+  font-style: italic;
+}
+
+.stepDone {
+  display: grid;
+  gap: 0.8rem;
+  text-align: center;
+  padding: 1rem;
+  border: 2px solid hsl(var(--success));
+  border-radius: 16px;
+  background: hsl(var(--success) / 0.07);
+}
+
+.stepDoneIcon {
+  font-size: 2.4rem;
+}
+
+.stepDoneTitle {
+  margin: 0;
+  font-size: 1rem;
+  color: hsl(var(--foreground));
+}
+
+.stepDoneNote {
+  margin: 0;
+  font-size: 0.85rem;
+  color: hsl(var(--muted-foreground));
+}
+
+/* ─── Motor exercises — compassionate summary ─────────────────────────────── */
+.liveTimer {
+  margin: 0;
+  font-size: 2rem;
+  font-weight: 800;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+  color: hsl(var(--foreground));
+}
+
+.arenaPrompt {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: hsl(var(--muted-foreground));
+  font-size: 0.9rem;
+  pointer-events: none;
+  margin: 0;
+}
+
+.sessionSummary {
+  border: 2px solid hsl(var(--border));
+  border-radius: 14px;
+  padding: 1rem;
+  background: hsl(var(--secondary));
+  display: grid;
+  gap: 0.4rem;
+}
+
+.summaryLine {
+  margin: 0;
+  font-size: 0.95rem;
+  font-weight: 700;
+}
+
+.summarySubLine {
+  margin: 0;
+  font-size: 0.82rem;
+  color: hsl(var(--muted-foreground));
+}
+
+/* ─── Generic helpers ─────────────────────────────────────────────────────── */
+.errorText {
+  margin: 0;
+  font-size: 0.85rem;
+  color: hsl(var(--destructive));
+  font-weight: 600;
+}
+
+.helperSmall {
+  margin: 0;
+  font-size: 0.8rem;
+  color: hsl(var(--muted-foreground));
+  line-height: 1.5;
+}

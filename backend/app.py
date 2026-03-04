@@ -440,6 +440,105 @@ def stream_analytics(user_id: str) -> Response:
     return Response(generate(), mimetype="text/event-stream")
 
 
+@app.route("/api/dyspraxia/decompose", methods=["POST"])
+def decompose_task() -> Response:
+    """
+    Module A — Dynamic Task Decomposition Engine
+    Implements φ:(Q,C)→G where:
+      Q = user goal (natural language)
+      C = context vector (anxiety_level, fatigue_level)
+      G = ordered micro-step sequence with granularity scaled to C
+
+    Higher anxiety/fatigue → more granular steps, shorter sentences,
+    motor-first instructions (stand, walk, reach) rather than cognitive.
+    """
+    import re
+
+    data = request.get_json(force=True) or {}
+    goal: str = (data.get("goal") or "").strip()
+    anxiety: int = max(1, min(10, int(data.get("anxietyLevel", 5))))
+    fatigue: int = max(1, min(10, int(data.get("fatigueLevel", 5))))
+
+    if not goal:
+        return jsonify({"error": "goal is required"}), 400
+
+    # φ mapping — composite context score drives granularity
+    context_score = (anxiety + fatigue) / 2.0  # 1–10
+
+    if context_score >= 7:
+        granularity_desc = (
+            "extremely tiny physical actions, 3-5 words each, up to 12 steps. "
+            "Focus on body movements: stand, walk, reach, touch, lift. "
+            "No cognitive instructions. DCD-friendly motor sequencing."
+        )
+        max_steps = 12
+    elif context_score >= 4:
+        granularity_desc = (
+            "small, clear single-action steps, 5-9 words each, 6-10 steps. "
+            "Physical actions only, one thing at a time."
+        )
+        max_steps = 10
+    else:
+        granularity_desc = (
+            "concise steps, up to 12 words each, 4-7 steps."
+        )
+        max_steps = 7
+
+    prompt = (
+        f'You are a Dyspraxia (DCD) and OCD support assistant.\n'
+        f'The user wants to accomplish: "{goal}".\n'
+        f'Current anxiety level: {anxiety}/10. Current fatigue level: {fatigue}/10.\n\n'
+        f'Break this into micro-steps that are {granularity_desc}\n'
+        f'Rules:\n'
+        f'- Each step must be ONE concrete, physical action.\n'
+        f'- No motivational language, no praise, no meta-commentary.\n'
+        f'- NEVER use numbered lists or bullet points.\n'
+        f'- Return ONLY a JSON array of strings, nothing else.\n'
+        f'- Maximum {max_steps} steps.\n\n'
+        f'Example for "Make tea": ["Walk to the kitchen", "Fill the kettle", '
+        f'"Switch the kettle on", "Place a mug on the counter", '
+        f'"Put a teabag in the mug", "Pour water when ready"]'
+    )
+
+    fallback_steps = [
+        f"Think about what you need for: {goal}",
+        "Gather anything you need nearby",
+        "Take one slow breath",
+        "Begin the very first part",
+        "Pause and rest if needed",
+        "Continue at your own pace",
+    ]
+
+    raw = call_gemini(prompt, "[]")
+
+    try:
+        match = re.search(r"\[.*?\]", raw, re.DOTALL)
+        steps = json.loads(match.group(0)) if match else []
+        if not isinstance(steps, list) or len(steps) == 0:
+            steps = fallback_steps
+        steps = [str(s).strip() for s in steps if str(s).strip()][:max_steps]
+    except Exception:
+        steps = fallback_steps
+
+    db.dyspraxia_decompositions.insert_one({
+        "goal": goal,
+        "anxietyLevel": anxiety,
+        "fatigueLevel": fatigue,
+        "contextScore": context_score,
+        "steps": steps,
+        "timestamp": now_utc(),
+    })
+
+    return jsonify({
+        "goal": goal,
+        "anxietyLevel": anxiety,
+        "fatigueLevel": fatigue,
+        "contextScore": round(context_score, 1),
+        "steps": steps,
+        "timestamp": now_utc().isoformat(),
+    })
+
+
 if __name__ == "__main__":
     create_indexes()
     app.run(host="0.0.0.0", port=5000, debug=True)
