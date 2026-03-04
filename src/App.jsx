@@ -33,27 +33,22 @@ import BodyDoubling from "./pages/adhd/BodyDoubling";
 
 // ── Dyslexia ─────────────────────────────────
 import DyslexiaPage from "./pages/DyslexiaPage";
-<<<<<<< Updated upstream
-import ReaderMode from "./pages/dyslexia/ReaderMode";
-import WordBank from "./pages/dyslexia/WordBank";
-
-// ── Other conditions ─────────────────────────
-import DyscalculiaPage from "./pages/DyscalculiaPage";
-import AnxietyPage from "./pages/AnxietyPage";
-=======
 import AdaptiveReadingIntelligence from "./pages/dyslexia/AdaptiveReadingIntelligence";
 import PhonologicalTrainingGenerator from "./pages/dyslexia/PhonologicalTrainingGenerator";
 import MultiSensoryReinforcementMode from "./pages/dyslexia/MultiSensoryReinforcementMode";
 import DyslexiaWritingAssistant from "./pages/dyslexia/DyslexiaWritingAssistant";
 import AIPersonalLearningProfile from "./pages/dyslexia/AIPersonalLearningProfile";
+
+// ── Dyscalculia ──────────────────────────────
 import DyscalculiaPage from "./pages/DyscalculiaPage";
 import NumberSenseEngine from "./pages/dyscalculia/NumberSenseEngine";
 import GuidedStepPractice from "./pages/dyscalculia/GuidedStepPractice";
 import RealLifeMathSimulator from "./pages/dyscalculia/RealLifeMathSimulator";
 import CalmMode from "./pages/dyscalculia/CalmMode";
 import PatternRecognitionTrainer from "./pages/dyscalculia/PatternRecognitionTrainer";
-import APDPage from "./pages/APDPage";
->>>>>>> Stashed changes
+
+// ── Other conditions ─────────────────────────
+import AnxietyPage from "./pages/AnxietyPage";
 import TourettesPage from "./pages/TourettesPage";
 
 // ── OCD ──────────────────────────────────────
@@ -81,40 +76,300 @@ function ShellRoutes() {
     <AppLayout>
       <Routes>
         {/* Admin-only */}
-        <Route path="/admin" element={<ProtectedRoute role="admin"><AdminDashboard /></ProtectedRoute>} />
+        <Route
+          path="/admin"
+          element={
+            <ProtectedRoute role="admin">
+              <AdminDashboard />
+            </ProtectedRoute>
+          }
+        />
 
         {/* Guardian-only */}
-        <Route path="/guardian-dashboard" element={<ProtectedRoute role="guardian"><GuardianDashboard /></ProtectedRoute>} />
+        <Route
+          path="/guardian-dashboard"
+          element={
+            <ProtectedRoute role="guardian">
+              <GuardianDashboard />
+            </ProtectedRoute>
+          }
+        />
 
         {/* User-only */}
-        <Route path="/settings" element={<ProtectedRoute role="user"><UserSettings /></ProtectedRoute>} />
+        <Route
+          path="/settings"
+          element={
+            <ProtectedRoute role="user">
+              <UserSettings />
+            </ProtectedRoute>
+          }
+        />
 
         {/* Any authenticated user */}
-        <Route path="/"                       element={<ProtectedRoute><Index /></ProtectedRoute>} />
-        <Route path="/asd"                    element={<ProtectedRoute feature={FEATURES.ASD}><ASDPage /></ProtectedRoute>} />
-        <Route path="/adhd"                   element={<ProtectedRoute feature={FEATURES.ADHD}><ADHDDashboard /></ProtectedRoute>} />
-        <Route path="/adhd/timeline"          element={<ProtectedRoute feature={FEATURES.ADHD_TIMELINE}><VisualTimeline /></ProtectedRoute>} />
-        <Route path="/adhd/breakdown"         element={<ProtectedRoute feature={FEATURES.ADHD_BREAKDOWN}><TaskBreakdown /></ProtectedRoute>} />
-        <Route path="/adhd/focus"             element={<ProtectedRoute feature={FEATURES.ADHD_FOCUS}><FocusSessions /></ProtectedRoute>} />
-        <Route path="/adhd/sounds"            element={<ProtectedRoute feature={FEATURES.ADHD_SOUNDS}><Soundscapes /></ProtectedRoute>} />
-        <Route path="/adhd/doubling"          element={<ProtectedRoute feature={FEATURES.ADHD_DOUBLING}><BodyDoubling /></ProtectedRoute>} />
-        <Route path="/adhd/emotion-coach"     element={<ProtectedRoute feature={FEATURES.ADHD_EMOTION}><EmotionCoach /></ProtectedRoute>} />
-        <Route path="/dyslexia"               element={<ProtectedRoute feature={FEATURES.DYSLEXIA}><DyslexiaPage /></ProtectedRoute>} />
-        <Route path="/dyslexia/reader"        element={<ProtectedRoute feature={FEATURES.DYSLEXIA_READER}><ReaderMode /></ProtectedRoute>} />
-        <Route path="/dyslexia/word-bank"     element={<ProtectedRoute feature={FEATURES.DYSLEXIA_WORDBANK}><WordBank /></ProtectedRoute>} />
-        <Route path="/dyscalculia"            element={<ProtectedRoute feature={FEATURES.DYSCALCULIA}><DyscalculiaPage /></ProtectedRoute>} />
-        <Route path="/ocd"                    element={<ProtectedRoute feature={FEATURES.OCD}><OCDDashboard /></ProtectedRoute>} />
-        <Route path="/ocd/erp-hierarchy"      element={<ProtectedRoute feature={FEATURES.OCD_ERP_TRACKER}><ERPHierarchy /></ProtectedRoute>} />
-        <Route path="/ocd/ritual-delayer"     element={<ProtectedRoute feature={FEATURES.OCD_RITUAL_DELAYER}><RitualDelayer /></ProtectedRoute>} />
-        <Route path="/ocd/compulsion-heatmap" element={<ProtectedRoute feature={FEATURES.OCD_HEATMAP}><CompulsionHeatmap /></ProtectedRoute>} />
-        <Route path="/ocd/logic-journal"      element={<ProtectedRoute feature={FEATURES.OCD_LOGIC_JOURNAL}><LogicCheckJournal /></ProtectedRoute>} />
-        <Route path="/dyspraxia"              element={<ProtectedRoute feature={FEATURES.DYSPRAXIA}><DyspraxiaDashboard /></ProtectedRoute>} />
-        <Route path="/dyspraxia/aomi-library" element={<ProtectedRoute feature={FEATURES.DYSPRAXIA_AOMI}><AOMILibrary /></ProtectedRoute>} />
-        <Route path="/dyspraxia/haptic-pacer" element={<ProtectedRoute feature={FEATURES.DYSPRAXIA_HAPTIC}><HapticPacer /></ProtectedRoute>} />
-        <Route path="/dyspraxia/ar-instructions" element={<ProtectedRoute feature={FEATURES.DYSPRAXIA_AR}><ARInstructionCards /></ProtectedRoute>} />
-        <Route path="/dyspraxia/safe-route"   element={<ProtectedRoute feature={FEATURES.DYSPRAXIA_ROUTE}><SafeRoutePlanner /></ProtectedRoute>} />
-        <Route path="/anxiety"                element={<ProtectedRoute feature={FEATURES.ANXIETY}><AnxietyPage /></ProtectedRoute>} />
-        <Route path="/tourettes"              element={<ProtectedRoute feature={FEATURES.TOURETTES}><TourettesPage /></ProtectedRoute>} />
+        <Route
+          path="/"
+          element={
+            <ProtectedRoute>
+              <Index />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/asd"
+          element={
+            <ProtectedRoute feature={FEATURES.ASD}>
+              <ASDPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/adhd"
+          element={
+            <ProtectedRoute feature={FEATURES.ADHD}>
+              <ADHDDashboard />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/adhd/timeline"
+          element={
+            <ProtectedRoute feature={FEATURES.ADHD_TIMELINE}>
+              <VisualTimeline />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/adhd/breakdown"
+          element={
+            <ProtectedRoute feature={FEATURES.ADHD_BREAKDOWN}>
+              <TaskBreakdown />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/adhd/focus"
+          element={
+            <ProtectedRoute feature={FEATURES.ADHD_FOCUS}>
+              <FocusSessions />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/adhd/sounds"
+          element={
+            <ProtectedRoute feature={FEATURES.ADHD_SOUNDS}>
+              <Soundscapes />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/adhd/doubling"
+          element={
+            <ProtectedRoute feature={FEATURES.ADHD_DOUBLING}>
+              <BodyDoubling />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/adhd/emotion-coach"
+          element={
+            <ProtectedRoute feature={FEATURES.ADHD_EMOTION}>
+              <EmotionCoach />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/dyslexia"
+          element={
+            <ProtectedRoute feature={FEATURES.DYSLEXIA}>
+              <DyslexiaPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/dyslexia/adaptive-reading"
+          element={
+            <ProtectedRoute feature={FEATURES.DYSLEXIA}>
+              <AdaptiveReadingIntelligence />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/dyslexia/phonology"
+          element={
+            <ProtectedRoute feature={FEATURES.DYSLEXIA}>
+              <PhonologicalTrainingGenerator />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/dyslexia/reinforcement"
+          element={
+            <ProtectedRoute feature={FEATURES.DYSLEXIA}>
+              <MultiSensoryReinforcementMode />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/dyslexia/writing-assistant"
+          element={
+            <ProtectedRoute feature={FEATURES.DYSLEXIA}>
+              <DyslexiaWritingAssistant />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/dyslexia/personal-profile"
+          element={
+            <ProtectedRoute feature={FEATURES.DYSLEXIA}>
+              <AIPersonalLearningProfile />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/dyscalculia"
+          element={
+            <ProtectedRoute feature={FEATURES.DYSCALCULIA}>
+              <DyscalculiaPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/dyscalculia/number-sense"
+          element={
+            <ProtectedRoute feature={FEATURES.DYSCALCULIA}>
+              <NumberSenseEngine />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/dyscalculia/step-practice"
+          element={
+            <ProtectedRoute feature={FEATURES.DYSCALCULIA}>
+              <GuidedStepPractice />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/dyscalculia/real-life-math"
+          element={
+            <ProtectedRoute feature={FEATURES.DYSCALCULIA}>
+              <RealLifeMathSimulator />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/dyscalculia/calm-mode"
+          element={
+            <ProtectedRoute feature={FEATURES.DYSCALCULIA}>
+              <CalmMode />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/dyscalculia/patterns"
+          element={
+            <ProtectedRoute feature={FEATURES.DYSCALCULIA}>
+              <PatternRecognitionTrainer />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/ocd"
+          element={
+            <ProtectedRoute feature={FEATURES.OCD}>
+              <OCDDashboard />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/ocd/erp-hierarchy"
+          element={
+            <ProtectedRoute feature={FEATURES.OCD_ERP_TRACKER}>
+              <ERPHierarchy />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/ocd/ritual-delayer"
+          element={
+            <ProtectedRoute feature={FEATURES.OCD_RITUAL_DELAYER}>
+              <RitualDelayer />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/ocd/compulsion-heatmap"
+          element={
+            <ProtectedRoute feature={FEATURES.OCD_HEATMAP}>
+              <CompulsionHeatmap />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/ocd/logic-journal"
+          element={
+            <ProtectedRoute feature={FEATURES.OCD_LOGIC_JOURNAL}>
+              <LogicCheckJournal />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/dyspraxia"
+          element={
+            <ProtectedRoute feature={FEATURES.DYSPRAXIA}>
+              <DyspraxiaDashboard />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/dyspraxia/aomi-library"
+          element={
+            <ProtectedRoute feature={FEATURES.DYSPRAXIA_AOMI}>
+              <AOMILibrary />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/dyspraxia/haptic-pacer"
+          element={
+            <ProtectedRoute feature={FEATURES.DYSPRAXIA_HAPTIC}>
+              <HapticPacer />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/dyspraxia/ar-instructions"
+          element={
+            <ProtectedRoute feature={FEATURES.DYSPRAXIA_AR}>
+              <ARInstructionCards />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/dyspraxia/safe-route"
+          element={
+            <ProtectedRoute feature={FEATURES.DYSPRAXIA_ROUTE}>
+              <SafeRoutePlanner />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/anxiety"
+          element={
+            <ProtectedRoute feature={FEATURES.ANXIETY}>
+              <AnxietyPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/tourettes"
+          element={
+            <ProtectedRoute feature={FEATURES.TOURETTES}>
+              <TourettesPage />
+            </ProtectedRoute>
+          }
+        />
 
         <Route path="*" element={<NotFound />} />
       </Routes>
@@ -133,7 +388,6 @@ const App = () => (
         <Sonner />
         <BrowserRouter>
           <Routes>
-<<<<<<< Updated upstream
             {/* Public — no layout, no auth required */}
             <Route path="/login" element={<Login />} />
 
@@ -149,42 +403,6 @@ const App = () => (
 
             {/* Everything else goes through the sidebar shell */}
             <Route path="/*" element={<ShellRoutes />} />
-=======
-            <Route path="/" element={<Index />} />
-            <Route path="/asd" element={<ASDPage />} />
-            <Route path="/adhd" element={<ADHDDashboard />} />
-            <Route path="/adhd/timeline" element={<VisualTimeline />} />
-            <Route path="/adhd/breakdown" element={<TaskBreakdown />} />
-            <Route path="/adhd/focus" element={<FocusSessions />} />
-            <Route path="/adhd/sounds" element={<Soundscapes />} />
-            <Route path="/adhd/doubling" element={<BodyDoubling />} />
-            <Route path="/adhd/emotion-coach" element={<EmotionCoach />} />
-            <Route path="/dyslexia" element={<DyslexiaPage />} />
-            <Route path="/dyslexia/adaptive-reading" element={<AdaptiveReadingIntelligence />} />
-            <Route path="/dyslexia/phonology" element={<PhonologicalTrainingGenerator />} />
-            <Route path="/dyslexia/reinforcement" element={<MultiSensoryReinforcementMode />} />
-            <Route path="/dyslexia/writing-assistant" element={<DyslexiaWritingAssistant />} />
-            <Route path="/dyslexia/personal-profile" element={<AIPersonalLearningProfile />} />
-            <Route path="/dyscalculia" element={<DyscalculiaPage />} />
-            <Route path="/dyscalculia/number-sense" element={<NumberSenseEngine />} />
-            <Route path="/dyscalculia/step-practice" element={<GuidedStepPractice />} />
-            <Route path="/dyscalculia/real-life-math" element={<RealLifeMathSimulator />} />
-            <Route path="/dyscalculia/calm-mode" element={<CalmMode />} />
-            <Route path="/dyscalculia/patterns" element={<PatternRecognitionTrainer />} />
-            <Route path="/ocd" element={<OCDDashboard />} />
-            <Route path="/ocd/erp-hierarchy" element={<ERPHierarchy />} />
-            <Route path="/ocd/ritual-delayer" element={<RitualDelayer />} />
-            <Route path="/ocd/compulsion-heatmap" element={<CompulsionHeatmap />} />
-            <Route path="/ocd/logic-journal" element={<LogicCheckJournal />} />
-            <Route path="/dyspraxia" element={<DyspraxiaDashboard />} />
-            <Route path="/dyspraxia/aomi-library" element={<AOMILibrary />} />
-            <Route path="/dyspraxia/haptic-pacer" element={<HapticPacer />} />
-            <Route path="/dyspraxia/ar-instructions" element={<ARInstructionCards />} />
-            <Route path="/dyspraxia/safe-route" element={<SafeRoutePlanner />} />
-            <Route path="/apd" element={<APDPage />} />
-            <Route path="/tourettes" element={<TourettesPage />} />
-            <Route path="*" element={<NotFound />} />
->>>>>>> Stashed changes
           </Routes>
         </BrowserRouter>
       </TooltipProvider>
@@ -193,4 +411,3 @@ const App = () => (
 );
 
 export default App;
-
