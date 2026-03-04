@@ -171,37 +171,107 @@ export const generateReframe = (thought) => {
   const value = thought.trim();
   if (!value) return null;
 
-  if (/(always|never|everyone|nobody)/i.test(value)) {
-    return {
-      evidencePrompt: "What real examples show this is not true in every situation?",
-      balancedThought: "Sometimes this feels true, but it is not true all the time.",
-      reinforcement: "You can pause, gather evidence, and respond more gently to yourself.",
-      pattern: "All-or-nothing thinking",
-    };
-  }
-
-  if (/(disaster|catastrophe|ruined|worst|terrible)/i.test(value)) {
-    return {
-      evidencePrompt: "What objective facts support the worst-case outcome, and what facts support a likely outcome?",
-      balancedThought: "This is difficult, but I can handle it step by step.",
-      reinforcement: "Anxiety predicts danger loudly. Breathing and facts can lower that alarm.",
+  const reframeProfiles = [
+    {
+      name: "Presentation fear",
+      regex: /(presentation|presenting|speech|public speaking|stage|audience)/i,
+      pattern: "Performance anxiety",
+      evidencePrompt: "What 2 things usually go okay when you present, even if you're nervous?",
+      balancedThought: "Nerves are normal before speaking. I can focus on one point at a time.",
+      reinforcement: "Use a short opening line, slow your first sentence, and continue step by step.",
+    },
+    {
+      name: "Social fear",
+      regex: /(people will judge|judg|embarrass|awkward|stupid|everyone.*watching|social)/i,
+      pattern: "Mind reading",
+      evidencePrompt: "What proof do you have about what others think, and what is just a fear?",
+      balancedThought: "I cannot know everyone’s thoughts. Most people are focused on themselves.",
+      reinforcement: "Choose one safe social action: eye contact, one sentence, then pause.",
+    },
+    {
+      name: "Catastrophizing",
+      regex: /(disaster|catastrophe|ruined|worst|terrible|everything will fail)/i,
       pattern: "Catastrophizing",
-    };
-  }
-
-  if (/(can't|cannot|impossible)/i.test(value)) {
-    return {
-      evidencePrompt: "What have you handled before that suggests you can cope now too?",
-      balancedThought: "I may not control everything, but I can choose one useful next action.",
-      reinforcement: "Small actions build stability. One action right now is enough.",
+      evidencePrompt: "What is the most likely outcome if this goes imperfectly, not perfectly?",
+      balancedThought: "This is hard, but not a disaster. I can handle the next part.",
+      reinforcement: "Write the next smallest action and do only that action now.",
+    },
+    {
+      name: "All-or-nothing",
+      regex: /(always|never|everyone|nobody|completely|totally)/i,
+      pattern: "All-or-nothing thinking",
+      evidencePrompt: "Can you name one exception where this thought was not 100% true?",
+      balancedThought: "This feels intense now, but reality is usually more mixed than absolute.",
+      reinforcement: "Replace absolute words with 'sometimes' and 'right now'.",
+    },
+    {
+      name: "Hopelessness",
+      regex: /(can't|cannot|impossible|no point|hopeless|i give up)/i,
       pattern: "Hopeless prediction",
+      evidencePrompt: "What challenge have you survived before that shows some coping ability?",
+      balancedThought: "I may not fix everything now, but I can do one helpful step.",
+      reinforcement: "Set a 2-minute timer and begin one tiny task.",
+    },
+    {
+      name: "Panic sensations",
+      regex: /(panic|heart racing|can't breathe|choking|dizzy|faint)/i,
+      pattern: "Threat amplification",
+      evidencePrompt: "Have these body sensations eased before when you slowed breathing?",
+      balancedThought: "My body is in alarm mode. This sensation is intense but temporary.",
+      reinforcement: "Exhale longer than inhale for 60-90 seconds and ground with 5-4-3-2-1.",
+    },
+    {
+      name: "Perfection pressure",
+      regex: /(perfect|mistake|mess(ed)? up|failed|failure|not good enough)/i,
+      pattern: "Perfectionism",
+      evidencePrompt: "What would 'good enough' look like for this exact situation?",
+      balancedThought: "Progress matters more than perfection. One mistake does not erase effort.",
+      reinforcement: "Define one realistic success criterion and stop when it is met.",
+    },
+    {
+      name: "Overthinking",
+      regex: /(overthink|overthinking|ruminat|what if|replay|looping thoughts)/i,
+      pattern: "Rumination loop",
+      evidencePrompt: "Is this thought helping you act, or only repeating fear?",
+      balancedThought: "I can notice this loop and return attention to the present task.",
+      reinforcement: "Write one worry sentence once, then shift to a timed grounding task.",
+    },
+    {
+      name: "Anger/frustration",
+      regex: /(angry|frustrat|irritat|annoyed|mad)/i,
+      pattern: "Emotional overload",
+      evidencePrompt: "What boundary or need is underneath this frustration?",
+      balancedThought: "My frustration signals a need. I can respond without attacking myself or others.",
+      reinforcement: "Pause, unclench shoulders, and state one need clearly and calmly.",
+    },
+    {
+      name: "Sadness/low mood",
+      regex: /(sad|empty|low|worthless|alone|lonely)/i,
+      pattern: "Negative filtering",
+      evidencePrompt: "What small sign of support or strength also exists right now?",
+      balancedThought: "This low feeling is real and it can pass; I still have options for support.",
+      reinforcement: "Do one nurturing action now: hydrate, sunlight, or message someone safe.",
+    },
+  ];
+
+  const matched = reframeProfiles.find((profile) => profile.regex.test(value));
+  if (!matched) {
+    return {
+      matched: false,
+      matchLabel: null,
+      pattern: null,
+      evidencePrompt: null,
+      balancedThought: null,
+      reinforcement: null,
     };
   }
 
   return {
-    evidencePrompt: "What facts support this thought, and what facts suggest a calmer interpretation?",
-    balancedThought: "I notice anxiety, and I can choose a grounded response instead of reacting automatically.",
-    reinforcement: "A feeling is real, but it is temporary and manageable.",
-    pattern: "General anxiety narrative",
+    matched: true,
+    matchLabel: matched.name,
+    evidencePrompt: matched.evidencePrompt,
+    balancedThought: matched.balancedThought,
+    reinforcement: matched.reinforcement,
+    pattern: matched.pattern,
   };
 };

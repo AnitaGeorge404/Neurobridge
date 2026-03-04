@@ -17,8 +17,48 @@ import {
   formatDateTimeInput,
   generateReframe,
 } from "./anxietyUtils";
-import { loadWardNotes, pushWardActivity, pushWardAlert } from "@/lib/careSyncStore";
+import { loadWardNotes, pushWardActivity, pushWardAlert, pushWardNote } from "@/lib/careSyncStore";
 import { MOCK_WARD_ACTIVITY } from "@/context/AuthContext";
+import { DISORDERS } from "@/lib/disorders";
+
+function normalizeReframe(result, originalThought) {
+  const noKeywordMatch = result?.matched === false;
+
+  const distortionTag =
+    result?.pattern ||
+    result?.distortionTag ||
+    (noKeywordMatch ? "Needs guardian review" : "General anxiety narrative");
+  const counterStatement =
+    result?.balancedThought ||
+    result?.counterStatement ||
+    (noKeywordMatch
+      ? "I couldn't confidently match this thought to a coping pattern yet."
+      : "I can pause, check facts, and respond with a calmer thought.");
+  const actionStep =
+    result?.reinforcement ||
+    result?.actionStep ||
+    (noKeywordMatch
+      ? "This has been shared to your guardian for a personalized reframe."
+      : "Take 3 slow breaths, then write one helpful next step.");
+  const evidencePrompt =
+    result?.evidencePrompt ||
+    (noKeywordMatch
+      ? "What context should your guardian know to help you best?"
+      : "What facts support this thought, and what facts support a more balanced view?");
+
+  const usedFallback = noKeywordMatch || !result?.pattern || !result?.balancedThought || !result?.reinforcement;
+
+  return {
+    originalThought,
+    distortionTag,
+    counterStatement,
+    actionStep,
+    evidencePrompt,
+    usedFallback,
+    keywordMatched: result?.matched !== false,
+    matchLabel: result?.matchLabel || null,
+  };
+}
 
 export default function AnxietyModule() {
   const { toast } = useToast();
@@ -71,7 +111,32 @@ export default function AnxietyModule() {
 
     try {
       const nextReframes = JSON.parse(localStorage.getItem(reframeStorageKey) || "[]");
-      setReframes(Array.isArray(nextReframes) ? nextReframes : []);
+      const migrated = Array.isArray(nextReframes)
+        ? nextReframes.map((entry) => {
+            if (!entry || typeof entry !== "object") {
+              return null;
+            }
+
+            const normalized = normalizeReframe(
+              {
+                pattern: entry.pattern || entry.distortionTag,
+                balancedThought: entry.balancedThought || entry.counterStatement,
+                reinforcement: entry.reinforcement || entry.actionStep,
+                evidencePrompt: entry.evidencePrompt,
+              },
+              entry.originalThought || "",
+            );
+
+            return {
+              ...entry,
+              distortionTag: normalized.distortionTag,
+              counterStatement: normalized.counterStatement,
+              actionStep: normalized.actionStep,
+              evidencePrompt: normalized.evidencePrompt,
+            };
+          }).filter(Boolean)
+        : [];
+      setReframes(migrated);
     } catch {
       setReframes([]);
     }
@@ -101,6 +166,10 @@ export default function AnxietyModule() {
   }, [userId]);
 
   const analytics = useMemo(() => analyzeLogs(logs), [logs]);
+  const wardHasAnxietyEnabled = useMemo(() => {
+    const disorders = Array.isArray(user?.disorders) ? user.disorders : [];
+    return disorders.includes(DISORDERS.ANXIETY) || disorders.includes("anxiety");
+  }, [user?.disorders]);
 
   const addLog = () => {
     if (!trigger.trim()) {
@@ -140,13 +209,18 @@ export default function AnxietyModule() {
       return;
     }
 
-    const result = generateReframe(thoughtInput);
+    const cleanedThought = thoughtInput.trim();
+    const result = generateReframe(cleanedThought);
+    const normalized = normalizeReframe(result, cleanedThought);
+
     const entry = {
       id: crypto.randomUUID(),
-      originalThought: thoughtInput.trim(),
-      distortionTag: result.distortionTag,
-      counterStatement: result.counterStatement,
-      actionStep: result.actionStep,
+      originalThought: normalized.originalThought,
+      distortionTag: normalized.distortionTag,
+      counterStatement: normalized.counterStatement,
+      actionStep: normalized.actionStep,
+      evidencePrompt: normalized.evidencePrompt,
+      matchLabel: normalized.matchLabel,
       createdAt: new Date().toISOString(),
     };
 
@@ -155,8 +229,29 @@ export default function AnxietyModule() {
       event: "CBT reframe completed in Anxiety module.",
       type: "positive",
     });
+
+    if (!normalized.keywordMatched && wardHasAnxietyEnabled) {
+      pushWardNote(userId, {
+        from: "ward",
+        text: `I need guardian help reframing this anxiety thought: "${cleanedThought}"`,
+      });
+      pushWardAlert(userId, {
+        level: "low",
+        message: "Ward requested guardian support: no keyword match for anxiety reframe.",
+        source: "anxiety-reframe",
+        kind: "guardian-support",
+      });
+    }
+
     setThoughtInput("");
-    toast({ title: "Reframe generated", description: "Balanced response stored locally." });
+    toast({
+      title: normalized.keywordMatched ? "Reframe generated" : "Shared with guardian",
+      description: normalized.keywordMatched
+        ? "Keyword-matched coping response stored locally."
+        : wardHasAnxietyEnabled
+        ? "No keyword match found. Thought shared for guardian-written reframe."
+        : "No keyword match found. Add anxiety in conditions to enable guardian fallback.",
+    });
   };
 
   const activatePanicFlow = () => {

@@ -7,6 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 
 export default function ReframePanel({ thoughtInput, setThoughtInput, reframes, onGenerate }) {
   const latest = useMemo(() => (reframes.length ? reframes[0] : null), [reframes]);
+  const pick = (value, fallback) => (value && String(value).trim() ? value : fallback);
 
   return (
     <Card>
@@ -26,10 +27,12 @@ export default function ReframePanel({ thoughtInput, setThoughtInput, reframes, 
           <Card>
             <CardHeader><CardTitle className="text-lg">Latest Reframe</CardTitle></CardHeader>
             <CardContent className="space-y-2 text-sm">
-              <p><span className="font-medium">Original:</span> {latest.originalThought}</p>
-              <p><span className="font-medium">Distortion:</span> {latest.distortionTag}</p>
-              <p><span className="font-medium">Counter:</span> {latest.counterStatement}</p>
-              <p><span className="font-medium">Action:</span> {latest.actionStep}</p>
+              <p><span className="font-medium">Original:</span> {pick(latest.originalThought, "Not provided")}</p>
+              <p><span className="font-medium">Distortion:</span> {pick(latest.distortionTag, "General anxiety narrative")}</p>
+              <p><span className="font-medium">Matched Feeling:</span> {pick(latest.matchLabel, "No keyword match")}</p>
+              <p><span className="font-medium">Counter:</span> {pick(latest.counterStatement, "I can pause, check facts, and respond with a calmer thought.")}</p>
+              <p><span className="font-medium">Action:</span> {pick(latest.actionStep, "Take 3 slow breaths, then write one helpful next step.")}</p>
+              <p><span className="font-medium">Evidence Prompt:</span> {pick(latest.evidencePrompt, "What facts support this thought, and what facts support a more balanced view?")}</p>
             </CardContent>
           </Card>
         )}
@@ -41,7 +44,7 @@ export default function ReframePanel({ thoughtInput, setThoughtInput, reframes, 
             {reframes.map((entry) => (
               <Textarea
                 key={entry.id}
-                value={`[${new Date(entry.createdAt).toLocaleString()}]\nOriginal: ${entry.originalThought}\nDistortion: ${entry.distortionTag}\nCounter: ${entry.counterStatement}\nAction: ${entry.actionStep}`}
+                value={`[${new Date(entry.createdAt).toLocaleString()}]\nOriginal: ${pick(entry.originalThought, "Not provided")}\nDistortion: ${pick(entry.distortionTag, "General anxiety narrative")}\nMatched Feeling: ${pick(entry.matchLabel, "No keyword match")}\nCounter: ${pick(entry.counterStatement, "I can pause, check facts, and respond with a calmer thought.")}\nAction: ${pick(entry.actionStep, "Take 3 slow breaths, then write one helpful next step.")}\nEvidence: ${pick(entry.evidencePrompt, "What facts support this thought, and what facts support a more balanced view?")}`}
                 readOnly
                 className="min-h-28"
               />
