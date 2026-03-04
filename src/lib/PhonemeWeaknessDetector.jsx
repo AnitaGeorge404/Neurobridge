@@ -253,13 +253,13 @@ export function PhonemeWeaknessDetector({ userId }) {
     () =>
       analysisResult
         ? Object.entries(analysisResult.phonemeErrors)
-            .slice(0, 8)
             .map(([phoneme, errors]) => ({
               name: phoneme.toUpperCase(),
               errors,
               weakness: errors * 3,
             }))
             .sort((a, b) => b.errors - a.errors)
+            .slice(0, 8)
         : [],
     [analysisResult]
   );
@@ -274,6 +274,11 @@ export function PhonemeWeaknessDetector({ userId }) {
         : [],
     [analysisResult]
   );
+
+  const calculationBasis =
+    analysisResult?.metadata?.usesHistory
+      ? "Dynamic model: text phoneme frequency + phoneme difficulty + your historical phoneme mistakes"
+      : "Dynamic model: text phoneme frequency + phoneme difficulty (history becomes active after practice data is available)";
 
   const selectedPhonemeData = topWeaknesses.find((p) => p.phoneme === selectedPhoneme);
   const phonemeRank = topWeaknesses.findIndex((p) => p.phoneme === selectedPhoneme) + 1;
@@ -362,6 +367,9 @@ export function PhonemeWeaknessDetector({ userId }) {
               </p>
               <p className="text-xs text-yellow-700 mt-2">
                 {score >= 80 ? "Excellent" : score >= 60 ? "Good" : score >= 40 ? "Fair" : "Needs work"}
+              </p>
+              <p className="text-xs text-yellow-800/90 mt-2 leading-relaxed">
+                {calculationBasis}
               </p>
             </Card>
 

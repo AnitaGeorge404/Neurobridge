@@ -1,6 +1,6 @@
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback } from "react";
 import {
-  extractPhonemes,
+  calculateDynamicPhonemeErrors,
   identifyWeaknesses,
   calculatePhonologicalScore,
 } from "@/lib/phonologicalAnalysis";
@@ -15,11 +15,33 @@ export function usePhonologicalAnalysis(userId) {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
 
+  const loadHistoricalPhonemeErrors = useCallback(async () => {
+    if (!userId || !isSupabaseConfigured) {
+      return {};
+    }
+
+    const { data, error: historyError } = await supabase
+      .from("phoneme_errors")
+      .select("phoneme, error_count")
+      .eq("user_id", userId);
+
+    if (historyError) {
+      console.warn("Unable to load historical phoneme errors:", historyError.message);
+      return {};
+    }
+
+    return (data ?? []).reduce((acc, row) => {
+      if (!row?.phoneme) return acc;
+      acc[row.phoneme] = Number(row.error_count) || 0;
+      return acc;
+    }, {});
+  }, [userId]);
+
   /**
    * Analyze text for phoneme weaknesses
    */
   const analyzeText = useCallback(
-    (text) => {
+    async (text) => {
       if (!text || !text.trim()) {
         setError("Text cannot be empty");
         return;
@@ -34,35 +56,31 @@ export function usePhonologicalAnalysis(userId) {
           .split(/\s+/)
           .filter((w) => w.match(/[a-z]/i));
 
-        const allPhonemes = [];
-        const phonemeFreq = {};
-        const phonemeErrors = {};
+        if (!words.length) {
+          setError("No valid words found for analysis");
+          return;
+        }
 
-        words.forEach((word) => {
-          const phonemes = extractPhonemes(word);
-          phonemes.forEach((p) => {
-            allPhonemes.push(p.phoneme);
-            phonemeFreq[p.phoneme] = (phonemeFreq[p.phoneme] || 0) + 1;
-          });
-        });
-
-        Object.keys(phonemeFreq).forEach((phoneme) => {
-          const errorRate = {
-            th: 0.45, r: 0.40, l: 0.35, s: 0.25, ch: 0.35,
-            sh: 0.32, z: 0.35, v: 0.32, default: 0.20,
-          };
-          const rate = errorRate[phoneme] || errorRate.default;
-          phonemeErrors[phoneme] = Math.round(phonemeFreq[phoneme] * rate);
-        });
+        const historicalErrors = await loadHistoricalPhonemeErrors();
+        const { phonemeFreq, phonemeErrors, metadata } =
+          calculateDynamicPhonemeErrors(words, historicalErrors);
 
         const weaknesses = identifyWeaknesses(phonemeErrors);
-        const phonScore = calculatePhonologicalScore(phonemeErrors);
+        const phonScore = calculatePhonologicalScore(
+          phonemeErrors,
+          phonemeFreq,
+          historicalErrors,
+        );
 
         setAnalysisResult({
           words: words.length,
           phonemeFreq,
           phonemeErrors,
           weaknesses,
+          metadata: {
+            ...metadata,
+            historicalPhonemesUsed: Object.keys(historicalErrors).length,
+          },
         });
 
         setScore(phonScore);
@@ -72,7 +90,7 @@ export function usePhonologicalAnalysis(userId) {
         setIsLoading(false);
       }
     },
-    []
+    [loadHistoricalPhonemeErrors]
   );
 
   const reset = useCallback(() => {
