@@ -49,7 +49,6 @@ import PatternRecognitionTrainer from "./pages/dyscalculia/PatternRecognitionTra
 
 // ── Other conditions ─────────────────────────
 import AnxietyPage from "./pages/AnxietyPage";
-import TourettesPage from "./pages/TourettesPage";
 
 // ── OCD ─────────────────────────────────────
 import OCDDashboard from "./pages/ocd/OCDDashboard";
@@ -358,14 +357,6 @@ function ShellRoutes() {
           element={
             <ProtectedRoute feature={FEATURES.ANXIETY}>
               <AnxietyPage />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/tourettes"
-          element={
-            <ProtectedRoute feature={FEATURES.TOURETTES}>
-              <TourettesPage />
             </ProtectedRoute>
           }
         />
