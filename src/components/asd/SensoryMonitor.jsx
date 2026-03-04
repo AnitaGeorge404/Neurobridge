@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -13,12 +13,6 @@ export default function SensoryMonitor({ role, profile, loading, onSaveThreshold
   const [sound, setSound] = useState(profile?.sound_threshold ?? 60);
   const [light, setLight] = useState(profile?.light_threshold ?? 60);
   const [crowd, setCrowd] = useState(profile?.crowd_threshold ?? 50);
-
-  useEffect(() => {
-    setSound(profile?.sound_threshold ?? 60);
-    setLight(profile?.light_threshold ?? 60);
-    setCrowd(profile?.crowd_threshold ?? 50);
-  }, [profile?.sound_threshold, profile?.light_threshold, profile?.crowd_threshold]);
 
   const sensoryScore = useMemo(() => {
     const score = Math.round((sound + light + crowd) / 3);

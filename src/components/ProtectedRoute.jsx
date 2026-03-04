@@ -57,7 +57,7 @@ export default function ProtectedRoute({ children, role, feature }) {
   // Feature gate: if a feature key is required and not enabled, redirect home
   // Neutral redirect — no error message, never exposes what disorder the user
   // lacks.  The UI never says "you don't have X disorder".
-  if (feature && !hasFeature(feature)) {
+  if (feature && userRole === "user" && !hasFeature(feature)) {
     return <Navigate to="/" replace />;
   }
 

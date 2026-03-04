@@ -1,64 +1,23 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
-import { AlertTriangle, ArrowLeft, Bell, BookOpen, Shield, Users } from "lucide-react";
+import { AlertTriangle, ArrowLeft, Heart, Shield, Users } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { useAuth } from "@/context/AuthContext";
-import {
-  fromAsdRoutineTask,
-  loadTaskNotifications,
-  loadWardTasks,
-  markAllTaskNotificationsRead,
-  saveWardTasks,
-  toAsdRoutineTask,
-} from "@/lib/wardTaskStore";
-import { loadWardNotes, pushWardActivity, pushWardAlert } from "@/lib/careSyncStore";
-import { MOCK_WARD_ACTIVITY } from "@/context/AuthContext";
+import { loadWardTasks, saveWardTasks, toAsdRoutineTask, fromAsdRoutineTask } from "@/lib/wardTaskStore";
+import { pushWardActivity, pushWardAlert } from "@/lib/careSyncStore";
 import RoutineVisualizer from "./RoutineVisualizer";
 import SensoryMonitor from "./SensoryMonitor";
 import SocialStoryBuilder from "./SocialStoryBuilder";
 import MeltdownPrevention from "./MeltdownPrevention";
 
 const ROLE_FALLBACK = "user";
-const ASD_PROFILE_STORAGE_PREFIX = "nb_asd_profile_";
-
-const getAsdProfileStorageKey = (userId) => `${ASD_PROFILE_STORAGE_PREFIX}${userId}`;
-
-const buildUserAsdDefaults = (user) => {
-  const disorders = Array.isArray(user?.disorders) ? user.disorders : [];
-  const hasAnxiety = disorders.includes("anxiety");
-  const primaryAsd = user?.selectedProfile === "asd";
-
-  return {
-    sensoryProfile: {
-      user_id: user?.id,
-      sound_threshold: hasAnxiety ? 52 : primaryAsd ? 58 : 62,
-      light_threshold: hasAnxiety ? 54 : primaryAsd ? 60 : 64,
-      crowd_threshold: hasAnxiety ? 45 : primaryAsd ? 50 : 55,
-      notes: hasAnxiety ? "ASD + Anxiety tuned profile" : "Local ASD profile",
-    },
-    scheduleSettings: {
-      morning_start: "07:00",
-      sensory_break: hasAnxiety ? "10:00" : "10:30",
-      evening_winddown: hasAnxiety ? "18:00" : "18:30",
-    },
-    alertSettings: {
-      alerts_enabled: true,
-      reminder_minutes: hasAnxiety ? 35 : 45,
-      meltdown_risk_threshold: hasAnxiety ? 58 : 65,
-      baseline_risk: hasAnxiety ? 16 : 10,
-      task_risk_weight: hasAnxiety ? 6 : 5,
-      task_risk_cap: hasAnxiety ? 45 : 40,
-      sensory_caution_threshold: hasAnxiety ? 58 : 60,
-      sensory_high_threshold: hasAnxiety ? 68 : 70,
-      sensory_caution_bonus: hasAnxiety ? 16 : 12,
-      sensory_high_bonus: hasAnxiety ? 30 : 25,
-    },
-  };
-};
+const ASD_PROFILE_PREFIX = "nb_asd_profile_";
+const ASD_STORIES_PREFIX = "nb_asd_stories_";
+const ASD_MELTDOWN_PREFIX = "nb_asd_meltdown_";
 
 const createStep = (id, text, image_url = "") => ({ id, text, image_url });
 
@@ -79,20 +38,6 @@ const getBuiltInStories = (name = "the child") => [
     is_builtin: true,
   },
   {
-    id: "builtin-doctor-visit",
-    user_id: "builtin",
-    title: "Doctor Visit Routine",
-    steps: [
-      createStep("doctor-1", "🩺 First, we arrive and check in at reception."),
-      createStep("doctor-2", "🪑 Then, we wait in the waiting area."),
-      createStep("doctor-3", "🗣️ When called, I walk in with my support person."),
-      createStep("doctor-4", "🌿 If I feel overloaded, I ask for a short break."),
-      createStep("doctor-5", "✅ After the visit, I choose a comfort activity."),
-    ],
-    content: "🩺 First, we arrive and check in at reception.",
-    is_builtin: true,
-  },
-  {
     id: "builtin-routine-change",
     user_id: "builtin",
     title: "When Plans Change",
@@ -101,98 +46,62 @@ const getBuiltInStories = (name = "the child") => [
       createStep("change-2", "📋 Look at the updated plan with support."),
       createStep("change-3", "❓ Ask one clear question about what happens next."),
       createStep("change-4", "🌿 Pick one calming strategy before moving on."),
-      createStep("change-5", "💪 Continue with one small next step."),
     ],
     content: "⚠️ Plans changed. Pause and take one breath.",
     is_builtin: true,
   },
-  {
-    id: "builtin-grocery-store",
-    user_id: "builtin",
-    title: "Grocery Store Success Steps",
-    steps: [
-      createStep("store-1", "🛒 Enter store and hold the shopping list."),
-      createStep("store-2", "🥦 Complete one aisle at a time."),
-      createStep("store-3", "🌿 If overwhelmed, pause in a quiet aisle and breathe."),
-      createStep("store-4", "✅ Check off finished items on the list."),
-      createStep("store-5", "🎉 Finishing even part of the list is success."),
-    ],
-    content: "🛒 Enter store and hold the shopping list.",
-    is_builtin: true,
-  },
-  {
-    id: "builtin-assembly-day",
-    user_id: "builtin",
-    title: "Assembly Day Plan",
-    steps: [
-      createStep("assembly-1", "🎒 Check bag and water bottle before leaving class."),
-      createStep("assembly-2", "👫 Walk with class in a calm line."),
-      createStep("assembly-3", "🎧 Use headphones if sound is too loud."),
-      createStep("assembly-4", "🌿 Take three slow breaths if crowded feelings rise."),
-      createStep("assembly-5", "✅ Return to class and note one thing that went well."),
-    ],
-    content: "🎒 Check bag and water bottle before leaving class.",
-    is_builtin: true,
-  },
-  {
-    id: "builtin-birthday-party",
-    user_id: "builtin",
-    title: "Birthday Party Steps",
-    steps: [
-      createStep("party-1", "🎁 Enter with support person and say hello."),
-      createStep("party-2", "👀 Find a quiet spot option before joining activities."),
-      createStep("party-3", "🎂 Join one activity at a time."),
-      createStep("party-4", "🌿 Take a break if noise or lights feel strong."),
-      createStep("party-5", "👋 Say goodbye and celebrate trying your best."),
-    ],
-    content: "🎁 Enter with support person and say hello.",
-    is_builtin: true,
-  },
-  {
-    id: "builtin-fire-drill",
-    user_id: "builtin",
-    title: "Unexpected Fire Drill",
-    steps: [
-      createStep("drill-1", "🚨 Hear alarm and pause with one deep breath."),
-      createStep("drill-2", "👂 Cover ears or use supports if needed."),
-      createStep("drill-3", "🚶 Follow teacher directions step by step."),
-      createStep("drill-4", "🌿 At safe point, breathe slowly until calm."),
-      createStep("drill-5", "✅ Return to class and restart with one easy task."),
-    ],
-    content: "🚨 Hear alarm and pause with one deep breath.",
-    is_builtin: true,
-  },
 ];
+
+const readJson = (key, fallback) => {
+  try {
+    const raw = localStorage.getItem(key);
+    return raw ? JSON.parse(raw) : fallback;
+  } catch {
+    return fallback;
+  }
+};
+
+const writeJson = (key, value) => {
+  localStorage.setItem(key, JSON.stringify(value));
+};
 
 export default function ASDModule() {
   const { user: appUser, role: appRole, isAuthenticated, isLoading: authLoading } = useAuth();
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [activeTab, setActiveTab] = useState("routine");
 
   const [currentUser, setCurrentUser] = useState(null);
   const [role, setRole] = useState(ROLE_FALLBACK);
+  const [targetWardId, setTargetWardId] = useState(null);
 
   const [routines, setRoutines] = useState([]);
   const [sensoryProfile, setSensoryProfile] = useState(null);
   const [stories, setStories] = useState([]);
   const [meltdownLogs, setMeltdownLogs] = useState([]);
-  const [scheduleSettings, setScheduleSettings] = useState({});
-  const [alertSettings, setAlertSettings] = useState({});
-  const [taskNotifications, setTaskNotifications] = useState([]);
-  const [guardianNotes, setGuardianNotes] = useState([]);
+  const [emotionCheckin, setEmotionCheckin] = useState("Calm");
 
-  const canEditRoutine = role === "guardian";
-  const canEditThresholds = role === "guardian";
-  const canManageStories = role === "guardian";
-  const canViewMeltdownLogs = role === "guardian";
+  const hasLinkedWards = Array.isArray(appUser?.linkedWardIds) && appUser.linkedWardIds.length > 0;
+  const isGuardian = role === "guardian" || appRole === "guardian" || appUser?.role === "guardian";
+  const isManagerMode = isGuardian || hasLinkedWards || String(appUser?.email || "").toLowerCase().includes("guardian");
+  const canEditRoutine = isManagerMode;
+  const canEditThresholds = isManagerMode;
+  const canManageStories = isManagerMode;
+  const canViewMeltdownLogs = isManagerMode;
   const canUseCalmingTools = role === "user" || role === "guardian";
   const isAdmin = role === "admin";
 
-  useEffect(() => {
-    if (authLoading) {
-      return;
+  const wardOptions = useMemo(() => {
+    const linkedIds = Array.isArray(appUser?.linkedWardIds) ? appUser.linkedWardIds : [];
+    if (linkedIds.length === 0 && isManagerMode) {
+      return [{ id: "nb-user-088", name: "Riya Sen" }];
     }
+    return linkedIds.map((id) => ({ id, name: id === "nb-user-088" ? "Riya Sen" : id }));
+  }, [appUser?.linkedWardIds]);
+
+  useEffect(() => {
+    if (authLoading) return;
 
     setLoading(true);
     setError("");
@@ -203,262 +112,214 @@ export default function ASDModule() {
       return;
     }
 
+    const resolvedRole = appRole || appUser?.role || ROLE_FALLBACK;
+    const linkedIds = Array.isArray(appUser?.linkedWardIds) ? appUser.linkedWardIds : [];
+    const resolvedWardId = (resolvedRole === "guardian" || isManagerMode) ? linkedIds[0] || "nb-user-088" : appUser.id;
+
     setCurrentUser(appUser);
-    setRole(appRole || ROLE_FALLBACK);
-
-    const builtInStories = getBuiltInStories(appUser.name);
-    const userDefaults = buildUserAsdDefaults(appUser);
-    const profileStorageKey = getAsdProfileStorageKey(appUser.id);
-    const persistedProfile = (() => {
-      try {
-        const raw = localStorage.getItem(profileStorageKey);
-        return raw ? JSON.parse(raw) : {};
-      } catch {
-        return {};
-      }
-    })();
-
-    const mergedSensoryProfile = { ...userDefaults.sensoryProfile, ...(persistedProfile.sensoryProfile || {}) };
-    const mergedScheduleSettings = { ...userDefaults.scheduleSettings, ...(persistedProfile.scheduleSettings || {}) };
-    const mergedAlertSettings = { ...userDefaults.alertSettings, ...(persistedProfile.alertSettings || {}) };
-
-    const tasksByWard = loadWardTasks([appUser.id]);
-    const wardTaskList = tasksByWard[appUser.id] || [];
-    setRoutines(wardTaskList.map((task) => toAsdRoutineTask(task, appUser.id)));
-    setSensoryProfile(mergedSensoryProfile);
-    setStories(builtInStories);
-    setMeltdownLogs([]);
-    setScheduleSettings(mergedScheduleSettings);
-    setAlertSettings(mergedAlertSettings);
-    setTaskNotifications(loadTaskNotifications(appUser.id));
-    setGuardianNotes(
-      loadWardNotes(appUser.id, MOCK_WARD_ACTIVITY[appUser.id]?.journalNotes || []).filter(
-        (note) => note.from === "guardian",
-      ),
-    );
-
+    setRole(resolvedRole);
+    setTargetWardId(resolvedWardId);
     setLoading(false);
-  }, [authLoading, isAuthenticated, appUser?.id, appUser?.name, appRole]);
+  }, [authLoading, isAuthenticated, appUser?.id, appRole, isManagerMode]);
 
   useEffect(() => {
-    if (!currentUser?.id || !sensoryProfile) {
-      return;
-    }
+    if (!targetWardId || !currentUser) return;
 
-    const profileStorageKey = getAsdProfileStorageKey(currentUser.id);
-    localStorage.setItem(
-      profileStorageKey,
-      JSON.stringify({
-        sensoryProfile,
-        scheduleSettings,
-        alertSettings,
+    setLoading(true);
+    const builtInStories = getBuiltInStories(currentUser.name);
+
+    const tasksByWard = loadWardTasks([targetWardId]);
+    const wardTaskList = tasksByWard[targetWardId] || [];
+    setRoutines(wardTaskList.map((task) => toAsdRoutineTask(task, targetWardId)));
+
+    setSensoryProfile(
+      readJson(`${ASD_PROFILE_PREFIX}${targetWardId}`, {
+        user_id: targetWardId,
+        sound_threshold: 60,
+        light_threshold: 60,
+        crowd_threshold: 50,
+        notes: "Local ASD profile",
       }),
     );
-  }, [currentUser?.id, sensoryProfile, scheduleSettings, alertSettings]);
+
+    const customStories = readJson(`${ASD_STORIES_PREFIX}${targetWardId}`, []);
+    setStories([...builtInStories, ...customStories]);
+    setMeltdownLogs(readJson(`${ASD_MELTDOWN_PREFIX}${targetWardId}`, []));
+
+    setLoading(false);
+  }, [targetWardId, currentUser?.id, currentUser?.name]);
 
   useEffect(() => {
-    if (!currentUser?.id) {
-      return;
-    }
+    if (!targetWardId) return;
 
-    const tasksByWard = loadWardTasks();
-    tasksByWard[currentUser.id] = routines.map(fromAsdRoutineTask);
-    saveWardTasks(tasksByWard);
-  }, [currentUser?.id, routines]);
-
-  useEffect(() => {
-    if (!currentUser?.id) {
-      return;
-    }
-
-    const syncNotifications = () => {
-      setTaskNotifications(loadTaskNotifications(currentUser.id));
-      setGuardianNotes(
-        loadWardNotes(currentUser.id, MOCK_WARD_ACTIVITY[currentUser.id]?.journalNotes || []).filter(
-          (note) => note.from === "guardian",
-        ),
-      );
+    const refresh = () => {
+      const tasksByWard = loadWardTasks([targetWardId]);
+      const wardTaskList = tasksByWard[targetWardId] || [];
+      setRoutines(wardTaskList.map((task) => toAsdRoutineTask(task, targetWardId)));
+      setSensoryProfile(readJson(`${ASD_PROFILE_PREFIX}${targetWardId}`, sensoryProfile || null));
+      const builtInStories = getBuiltInStories(currentUser?.name || "the child");
+      const customStories = readJson(`${ASD_STORIES_PREFIX}${targetWardId}`, []);
+      setStories([...builtInStories, ...customStories]);
+      setMeltdownLogs(readJson(`${ASD_MELTDOWN_PREFIX}${targetWardId}`, []));
     };
 
-    syncNotifications();
-    const timer = setInterval(syncNotifications, 2000);
-    window.addEventListener("storage", syncNotifications);
-
+    const timer = setInterval(refresh, 2500);
+    window.addEventListener("storage", refresh);
     return () => {
       clearInterval(timer);
-      window.removeEventListener("storage", syncNotifications);
+      window.removeEventListener("storage", refresh);
     };
-  }, [currentUser?.id]);
+  }, [targetWardId, currentUser?.name, sensoryProfile]);
+
+  const persistRoutines = (nextRoutines) => {
+    if (!targetWardId) return;
+    const tasksByWard = loadWardTasks();
+    tasksByWard[targetWardId] = nextRoutines.map(fromAsdRoutineTask);
+    saveWardTasks(tasksByWard);
+  };
 
   const addRoutineTask = ({ title, timeLabel }) => {
-    if (!canEditRoutine || !currentUser) {
-      return;
-    }
+    if (!canEditRoutine || !targetWardId) return;
 
-    setRoutines((prev) => [
-      ...prev,
+    const next = [
+      ...routines,
       {
         id: `local-${Date.now()}`,
-        user_id: currentUser.id,
+        user_id: targetWardId,
         title,
         time_label: timeLabel || null,
         is_completed: false,
       },
-    ]);
+    ];
+
+    setRoutines(next);
+    persistRoutines(next);
+    pushWardActivity(targetWardId, { event: `Routine added: ${title}`, type: "neutral" });
   };
 
   const toggleTaskCompletion = (task) => {
-    setRoutines((prev) => prev.map((item) => (item.id === task.id ? { ...item, is_completed: !item.is_completed } : item)));
-    if (currentUser?.id) {
-      pushWardActivity(currentUser.id, {
-        event: `${task.title} marked ${task.is_completed ? "pending" : "complete"}.`,
-        type: task.is_completed ? "neutral" : "positive",
+    const next = routines.map((item) =>
+      item.id === task.id ? { ...item, is_completed: !item.is_completed } : item,
+    );
+    setRoutines(next);
+    persistRoutines(next);
+    if (targetWardId && !task.is_completed) {
+      pushWardActivity(targetWardId, { event: `${task.title} marked complete`, type: "positive" });
+    }
+  };
+
+  const editRoutineTask = (task, patch) => {
+    if (!canEditRoutine) return;
+    const next = routines.map((item) =>
+      item.id === task.id
+        ? {
+            ...item,
+            title: patch?.title ?? item.title,
+            time_label: patch?.time_label ?? item.time_label,
+          }
+        : item,
+    );
+    setRoutines(next);
+    persistRoutines(next);
+    if (targetWardId) {
+      pushWardActivity(targetWardId, {
+        event: `Routine updated: ${patch?.title || task.title}`,
+        type: "neutral",
       });
     }
   };
 
-  const updateRoutineTask = (task, { title, timeLabel }) => {
-    if (!canEditRoutine || !currentUser) {
-      return;
-    }
-
-    const nextTitle = (title || "").trim();
-    if (!nextTitle) {
-      return;
-    }
-
-    setRoutines((prev) =>
-      prev.map((item) =>
-        item.id === task.id
-          ? {
-              ...item,
-              title: nextTitle,
-              time_label: (timeLabel || "").trim() || null,
-            }
-          : item,
-      ),
-    );
-  };
-
   const deleteRoutineTask = (task) => {
-    if (!canEditRoutine || !currentUser) {
-      return;
+    if (!canEditRoutine || !task?.id) return;
+    const next = routines.filter((item) => item.id !== task.id);
+    setRoutines(next);
+    persistRoutines(next);
+    if (targetWardId) {
+      pushWardActivity(targetWardId, {
+        event: `Routine deleted: ${task.title}`,
+        type: "neutral",
+      });
     }
-
-    setRoutines((prev) => prev.filter((item) => item.id !== task.id));
-  };
-
-  const saveScheduleAndAlerts = ({ schedule, alerts }) => {
-    if (!canEditRoutine || !currentUser) {
-      return;
-    }
-
-    setScheduleSettings((prev) => ({ ...prev, ...(schedule || {}) }));
-    setAlertSettings((prev) => ({ ...prev, ...(alerts || {}) }));
-    pushWardActivity(currentUser.id, {
-      event: "Guardian updated schedule and alert settings.",
-      type: "neutral",
-    });
   };
 
   const saveThresholds = (payload) => {
-    if (!canEditThresholds || !currentUser) {
-      return;
-    }
-    setSensoryProfile((prev) => ({ ...prev, ...payload }));
+    if (!canEditThresholds || !targetWardId) return;
+    const next = { ...sensoryProfile, ...payload };
+    setSensoryProfile(next);
+    writeJson(`${ASD_PROFILE_PREFIX}${targetWardId}`, next);
   };
 
   const createStory = ({ title, content, steps }) => {
-    if (!canManageStories || !currentUser) {
-      return;
-    }
+    if (!canManageStories || !targetWardId) return;
 
     const normalizedSteps = Array.isArray(steps)
       ? steps.filter((step) => typeof step?.text === "string" && step.text.trim())
       : [];
 
-    const fallbackContent = content || normalizedSteps[0]?.text || "";
-
-    setStories((prev) => [
+    const customStories = readJson(`${ASD_STORIES_PREFIX}${targetWardId}`, []);
+    const nextCustom = [
       {
         id: `local-story-${Date.now()}`,
-        user_id: currentUser.id,
+        user_id: targetWardId,
         title,
-        content: fallbackContent,
+        content: content || normalizedSteps[0]?.text || "",
         steps: normalizedSteps,
         is_builtin: false,
       },
-      ...prev,
-    ]);
+      ...customStories,
+    ];
+
+    writeJson(`${ASD_STORIES_PREFIX}${targetWardId}`, nextCustom);
+    setStories([...getBuiltInStories(currentUser?.name || "the child"), ...nextCustom]);
   };
 
   const updateStory = (storyId, patch) => {
-    if (!canManageStories || !currentUser) {
-      return;
-    }
-
+    if (!canManageStories || !targetWardId) return;
     if (storyId.startsWith("builtin-")) {
       setError("Built-in stories are read-only. Create a new custom story to modify steps.");
       return;
     }
 
-    setStories((prev) => prev.map((item) => (item.id === storyId ? { ...item, ...patch } : item)));
+    const customStories = readJson(`${ASD_STORIES_PREFIX}${targetWardId}`, []);
+    const nextCustom = customStories.map((item) => (item.id === storyId ? { ...item, ...patch } : item));
+    writeJson(`${ASD_STORIES_PREFIX}${targetWardId}`, nextCustom);
+    setStories([...getBuiltInStories(currentUser?.name || "the child"), ...nextCustom]);
   };
 
   const deleteStory = (storyId) => {
-    if (!canManageStories || !currentUser) {
-      return;
-    }
-
+    if (!canManageStories || !targetWardId) return;
     if (storyId.startsWith("builtin-")) {
       setError("Built-in stories cannot be deleted.");
       return;
     }
 
-    setStories((prev) => prev.filter((item) => item.id !== storyId));
+    const customStories = readJson(`${ASD_STORIES_PREFIX}${targetWardId}`, []);
+    const nextCustom = customStories.filter((item) => item.id !== storyId);
+    writeJson(`${ASD_STORIES_PREFIX}${targetWardId}`, nextCustom);
+    setStories([...getBuiltInStories(currentUser?.name || "the child"), ...nextCustom]);
   };
 
   const createMeltdownLog = (payload) => {
-    if (!canUseCalmingTools || !currentUser) {
-      return;
-    }
+    if (!canUseCalmingTools || !targetWardId) return;
 
-    setMeltdownLogs((prev) => [
-      {
-        id: `local-log-${Date.now()}`,
-        user_id: currentUser.id,
-        created_at: new Date().toISOString(),
-        ...payload,
-      },
-      ...prev,
-    ]);
+    const entry = {
+      id: `local-log-${Date.now()}`,
+      user_id: targetWardId,
+      created_at: new Date().toISOString(),
+      ...payload,
+    };
 
-    pushWardActivity(currentUser.id, {
-      event: payload?.notes || "Meltdown prevention action logged.",
-      type: payload?.risk_level === "high" ? "alert" : "neutral",
+    const next = [entry, ...meltdownLogs];
+    setMeltdownLogs(next);
+    writeJson(`${ASD_MELTDOWN_PREFIX}${targetWardId}`, next);
+
+    pushWardAlert(targetWardId, {
+      level: payload?.risk_level === "high" ? "high" : "medium",
+      message: payload?.notes || "Coping mode activated",
     });
-
-    if (payload?.risk_level === "high") {
-      pushWardAlert(currentUser.id, {
-        level: "high",
-        message: payload?.notes || "High-risk meltdown alert recorded.",
-      });
-    }
   };
 
-  const roleBadge = useMemo(() => role.toUpperCase(), [role]);
-  const unreadTaskNotifications = useMemo(
-    () => taskNotifications.filter((item) => !item.read),
-    [taskNotifications],
-  );
-
-  const markTaskAlertsRead = () => {
-    if (!currentUser?.id) {
-      return;
-    }
-    markAllTaskNotificationsRead(currentUser.id);
-    setTaskNotifications(loadTaskNotifications(currentUser.id));
-  };
+  const roleBadge = useMemo(() => (isManagerMode ? "GUARDIAN" : role.toUpperCase()), [role, isManagerMode]);
 
   return (
     <div className="space-y-5 animate-fade-in">
@@ -467,14 +328,31 @@ export default function ASDModule() {
           <ArrowLeft size={16} /> Back to Modes
         </Link>
         <Badge variant="secondary" className="gap-1"><Shield size={14} /> Role: {roleBadge}</Badge>
-        <Badge variant="outline">Local Mode (No Database)</Badge>
+        <Badge variant="outline">Local Shared Sync</Badge>
       </div>
+
+      {isManagerMode && wardOptions.length > 0 && (
+        <Card>
+          <CardContent className="pt-5 flex items-center gap-3">
+            <span className="text-sm text-muted-foreground">Viewing child:</span>
+            <select
+              className="h-9 rounded-md border bg-background px-3 text-sm"
+              value={targetWardId || ""}
+              onChange={(event) => setTargetWardId(event.target.value)}
+            >
+              {wardOptions.map((ward) => (
+                <option key={ward.id} value={ward.id}>{ward.name}</option>
+              ))}
+            </select>
+          </CardContent>
+        </Card>
+      )}
 
       <Card>
         <CardHeader>
           <CardTitle className="text-3xl">ASD Support Module</CardTitle>
           <CardDescription>
-            Modular ASD features running in local mode (database removed for now).
+            Current layout preserved with integrated guardian-child local synchronization.
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -484,40 +362,48 @@ export default function ASDModule() {
               <AlertDescription>{error}</AlertDescription>
             </Alert>
           )}
+          {!loading && isManagerMode && (
+            <Alert>
+              <AlertDescription>
+                Guardian task manager is enabled. You can Add, Edit, and Delete tasks in the Routine tab.
+              </AlertDescription>
+            </Alert>
+          )}
         </CardContent>
       </Card>
 
-      {role === "user" && unreadTaskNotifications.length > 0 && (
-        <Alert>
-          <Bell className="h-4 w-4" />
-          <AlertDescription>
-            <div className="space-y-2">
-              <p className="font-medium">Guardian task change alerts ({unreadTaskNotifications.length})</p>
-              <div className="space-y-1">
-                {unreadTaskNotifications.slice(0, 3).map((item) => (
-                  <p key={item.id} className="text-sm">
-                    • {item.message}
-                  </p>
-                ))}
-              </div>
-              <Button size="sm" variant="outline" onClick={markTaskAlertsRead}>Mark all read</Button>
-            </div>
-          </AlertDescription>
-        </Alert>
-      )}
-
-      {role === "user" && guardianNotes.length > 0 && (
-        <Alert>
-          <BookOpen className="h-4 w-4" />
-          <AlertDescription>
-            <div className="space-y-1">
-              <p className="font-medium">Shared Journal from Guardian</p>
-              {guardianNotes.slice(0, 3).map((note) => (
-                <p key={note.id} className="text-sm">• {note.text} <span className="text-muted-foreground">({note.ts})</span></p>
-              ))}
-            </div>
-          </AlertDescription>
-        </Alert>
+      {!isAdmin && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-xl"><Heart size={18} /> Emotional Check-in</CardTitle>
+            <CardDescription>
+              Quick emotional card for Riya to self-identify and trigger coping support when needed.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="flex flex-wrap gap-2">
+            {["Calm", "Worried", "Overwhelmed", "Upset"].map((emotion) => (
+              <Button
+                key={emotion}
+                variant={emotionCheckin === emotion ? "default" : "outline"}
+                size="sm"
+                onClick={() => {
+                  setEmotionCheckin(emotion);
+                  if (emotion === "Overwhelmed" || emotion === "Upset") {
+                    createMeltdownLog({
+                      event_type: "emotional-checkin",
+                      notes: `Emotion selected: ${emotion}`,
+                      risk_level: emotion === "Overwhelmed" ? "high" : "moderate",
+                    });
+                    setActiveTab("meltdown");
+                  }
+                }}
+              >
+                {emotion}
+              </Button>
+            ))}
+            <Badge variant="secondary">Current: {emotionCheckin}</Badge>
+          </CardContent>
+        </Card>
       )}
 
       {isAdmin ? (
@@ -525,19 +411,19 @@ export default function ASDModule() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2"><Users size={18} /> Admin View</CardTitle>
             <CardDescription>
-              Database-linked admin controls are disabled in local mode.
+              Admin controls are read-only in local shared sync mode.
             </CardDescription>
           </CardHeader>
           <CardContent>
             <Alert>
               <AlertDescription>
-                Guardian-user linking and user-directory management are paused until database mode is re-enabled.
+                Guardian-user ASD data sharing is active via local synchronized storage.
               </AlertDescription>
             </Alert>
           </CardContent>
         </Card>
       ) : (
-        <Tabs defaultValue="routine" className="space-y-4">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
           <TabsList className="grid w-full grid-cols-2 lg:grid-cols-4 h-auto gap-1 p-1">
             <TabsTrigger value="routine">Routine</TabsTrigger>
             <TabsTrigger value="sensory">Sensory</TabsTrigger>
@@ -548,15 +434,13 @@ export default function ASDModule() {
           <TabsContent value="routine">
             <RoutineVisualizer
               role={role}
+              canManageRoutine={canEditRoutine}
               routines={routines}
               loading={loading}
               onAddTask={addRoutineTask}
               onToggleTask={toggleTaskCompletion}
-              onUpdateTask={updateRoutineTask}
+              onEditTask={editRoutineTask}
               onDeleteTask={deleteRoutineTask}
-              scheduleSettings={scheduleSettings}
-              alertSettings={alertSettings}
-              onSaveScheduleAndAlerts={saveScheduleAndAlerts}
             />
           </TabsContent>
 
@@ -587,7 +471,6 @@ export default function ASDModule() {
               sensoryProfile={sensoryProfile}
               meltdownLogs={canViewMeltdownLogs ? meltdownLogs : []}
               onCreateMeltdownLog={createMeltdownLog}
-              alertSettings={alertSettings}
             />
           </TabsContent>
         </Tabs>
@@ -596,7 +479,7 @@ export default function ASDModule() {
       <Alert>
         <AlertTriangle className="h-4 w-4" />
         <AlertDescription>
-          ASD module is currently local-only. Reintroduce database syncing when backend policies and auth are ready.
+          Neha-Riya ASD integration is enabled in local shared sync mode.
         </AlertDescription>
       </Alert>
     </div>

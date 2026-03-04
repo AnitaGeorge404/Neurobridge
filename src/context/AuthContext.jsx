@@ -1,26 +1,30 @@
 import { createContext, useContext, useEffect, useState, useCallback, useMemo } from "react";
 import { resolveEnabledFeatures } from "@/lib/featureRegistry";
 import { DISORDERS } from "@/lib/disorders";
+<<<<<<< Updated upstream
 import { pushWardNote } from "@/lib/careSyncStore";
 import { supabase } from "@/lib/supabaseClient";
 
 function buildProfileFromSupabase(supabaseUser) {
-  const meta    = supabaseUser.user_metadata  ?? {};
-  const appMeta = supabaseUser.app_metadata   ?? {};
+  const meta = supabaseUser?.user_metadata ?? {};
+  const appMeta = supabaseUser?.app_metadata ?? {};
+
   return {
-    id:              supabaseUser.id,
-    email:           supabaseUser.email,
-    name:            meta.name || meta.full_name || supabaseUser.email?.split("@")[0] || "User",
-    role:            appMeta.role    || meta.role    || "user",
-    abhaId:          meta.abhaId    ?? null,
+    id: supabaseUser.id,
+    email: supabaseUser.email,
+    name: meta.name || meta.full_name || supabaseUser.email?.split("@")[0] || "User",
+    role: appMeta.role || meta.role || "user",
+    abhaId: meta.abhaId ?? null,
     selectedProfile: meta.selectedProfile ?? null,
-    disorders:       Array.isArray(meta.disorders) ? meta.disorders : [],
-    privacy:         meta.privacy         ?? { shareActivity: true, shareJournal: false, shareAlerts: true },
-    accessibility:   meta.accessibility   ?? { reduceMotion: false, screenReader: false },
-    linkedWardIds:   meta.linkedWardIds   ?? [],
-    _supabase: true,   // distinguishes real users from mock demo users
+    disorders: Array.isArray(meta.disorders) ? meta.disorders : [],
+    privacy: meta.privacy ?? { shareActivity: true, shareJournal: false, shareAlerts: true },
+    accessibility: meta.accessibility ?? { reduceMotion: false, screenReader: false },
+    linkedWardIds: meta.linkedWardIds ?? [],
+    _supabase: true,
   };
 }
+=======
+>>>>>>> Stashed changes
 
 export const CARE_LINK_REGISTRY = {
   "CL-ARUN-0042": "nb-user-042",
@@ -48,7 +52,7 @@ const MOCK_USERS = {
     disorders: [DISORDERS.OCD],
     privacy: {
       shareActivity: true,
-      shareJournal: false,  // journal stays private by default
+      shareJournal: false,
       shareAlerts: true,
     },
     accessibility: {
@@ -56,7 +60,6 @@ const MOCK_USERS = {
       screenReader: false,
     },
   },
-  // Second mock ward for the second linked child
   "nb-user-011": {
     id: "nb-user-011",
     name: "Meera Pillai",
@@ -80,17 +83,14 @@ const MOCK_USERS = {
     role: "user",
     abhaId: "44-8080-9090-1010",
     careLinkId: "CL-RIYA-0088",
-    selectedProfile: "anxiety",
+    selectedProfile: "asd",
     disorders: [DISORDERS.ANXIETY, DISORDERS.ASD],
     privacy: {
       shareActivity: true,
       shareJournal: true,
       shareAlerts: true,
     },
-    accessibility: {
-      reduceMotion: false,
-      screenReader: false,
-    },
+    accessibility: { reduceMotion: false, screenReader: false },
   },
   guardian: {
     id: "nb-guardian-001",
@@ -125,12 +125,12 @@ export const MOCK_WARD_ACTIVITY = {
       { time: "18:00", event: "Completed 2 Response Prevention Goals", type: "positive" },
     ],
     alerts: [
-      { id: "a1", ts: "Today 16:10", level: "high",   message: "SOS Grounding activated. SUDS reported at 85.", resolved: false },
-      { id: "a2", ts: "Yesterday",   level: "medium", message: "Missed 2 scheduled ERP sessions.",             resolved: true },
+      { id: "a1", ts: "Today 16:10", level: "high", message: "SOS Grounding activated. SUDS reported at 85.", resolved: false },
+      { id: "a2", ts: "Yesterday", level: "medium", message: "Missed 2 scheduled ERP sessions.", resolved: true },
     ],
     journalNotes: [
       { id: "j1", from: "guardian", text: "So proud of you for your ERP session today! 🌟", ts: "Today 08:00", private: false },
-      { id: "j2", from: "ward",     text: "Felt really anxious at school but used the 4-7-8 breathing.", ts: "Today 13:00", private: false },
+      { id: "j2", from: "ward", text: "Felt really anxious at school but used the 4-7-8 breathing.", ts: "Today 13:00", private: false },
     ],
     weeklyStats: { erpSessions: 5, compulsionsResisted: 14, averageSuds: 48, streakDays: 4 },
   },
@@ -150,37 +150,32 @@ export const MOCK_WARD_ACTIVITY = {
   },
   "nb-user-088": {
     name: "Riya Sen",
-    profile: "anxiety",
+    profile: "asd",
     today: [
       { time: "08:10", event: "Started ASD routine visual schedule", type: "positive" },
       { time: "10:05", event: "Sensory break completed with calm breathing", type: "positive" },
-      { time: "13:20", event: "Anxiety trigger logged: loud classroom noise", type: "neutral" },
-      { time: "16:00", event: "Panic mode activated and resolved in 5 minutes", type: "alert" },
-      { time: "18:30", event: "Completed social story flashcards", type: "positive" },
+      { time: "13:20", event: "Trigger logged: loud classroom noise", type: "neutral" },
     ],
     alerts: [
-      { id: "a88-1", ts: "Today 16:00", level: "medium", message: "Panic mode triggered from Anxiety toolkit.", resolved: false },
+      { id: "a88-1", ts: "Today 13:20", level: "medium", message: "Sensory trigger detected.", resolved: false },
     ],
     journalNotes: [
-      { id: "j88-1", from: "ward", text: "Noise felt too much, but breathing helped me calm down.", ts: "Today 16:20", private: false },
+      { id: "j88-1", from: "ward", text: "Noise felt too much, breathing helped.", ts: "Today 13:40", private: false },
     ],
     weeklyStats: { calmingSessions: 9, sensoryBreaks: 12, averageAnxiety: 42, streakDays: 5 },
   },
 };
 
+<<<<<<< Updated upstream
 function resolveMockAccountKey(role, options = {}) {
   const email = String(options.email || "").toLowerCase().trim();
-  const careLinkId = String(options.careLinkId || "").toUpperCase();
+  const careLinkId = String(options.careLinkId || "").toUpperCase().trim();
 
   if (email.includes("riya")) {
     return role === "guardian" ? "guardian_asd_anxiety" : "user_asd_anxiety";
   }
 
-  if (email.includes("neha")) {
-    return "guardian_asd_anxiety";
-  }
-
-  if (careLinkId === "CL-RIYA-0088") {
+  if (email.includes("neha") || careLinkId === "CL-RIYA-0088") {
     return "guardian_asd_anxiety";
   }
 
@@ -192,71 +187,88 @@ function resolveMockAccountKey(role, options = {}) {
   }
 
   if (role === "guardian") {
-    if (
-      email.includes("neha") ||
-      email.includes("riya") ||
-      careLinkId === "CL-RIYA-0088"
-    ) {
-      return "guardian_asd_anxiety";
-    }
     return "guardian";
   }
 
   return role;
 }
 
+=======
+// ─────────────────────────────────────────────
+//  Context
+// ─────────────────────────────────────────────
+>>>>>>> Stashed changes
 const AuthContext = createContext(null);
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [isLoading, setIsLoading] = useState(true); // hydrating from storage
+  const [isLoading, setIsLoading] = useState(true);
 
   const disorders = useMemo(() => {
     if (!user) return [];
     if (Array.isArray(user.disorders) && user.disorders.length > 0) return user.disorders;
-    if (user.selectedProfile) return [user.selectedProfile]; // legacy single-profile
+    if (user.selectedProfile) return [user.selectedProfile];
     return [];
   }, [user]);
 
   const enabledFeatures = useMemo(() => resolveEnabledFeatures(disorders), [disorders]);
-
-  /** Check whether a feature key is unlocked for the current user. */
   const hasFeature = useCallback((featureKey) => enabledFeatures.has(featureKey), [enabledFeatures]);
 
-  // Hydrate: Supabase session takes priority; fall back to nb_auth (demo users)
+<<<<<<< Updated upstream
   useEffect(() => {
     let mounted = true;
 
-    // 1. Subscribe to Supabase session changes (real users)
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (_event, session) => {
-        if (!mounted) return;
-        if (session?.user) {
-          const profile = buildProfileFromSupabase(session.user);
-          // Merge any persisted prefs (disorders etc.) saved via updateDisorders
-          const persisted = (() => {
-            try { return JSON.parse(localStorage.getItem(`nb_prefs_${profile.id}`) || "{}"); }
-            catch { return {}; }
-          })();
-          const merged = { ...profile, ...persisted };
-          localStorage.setItem("nb_auth", JSON.stringify(merged));
-          setUser(merged);
-          setIsAuthenticated(true);
+    const applyAuthenticatedUser = (authUser) => {
+      const profile = buildProfileFromSupabase(authUser);
+      const persisted = (() => {
+        try {
+          return JSON.parse(localStorage.getItem(`nb_prefs_${profile.id}`) || "{}");
+        } catch {
+          return {};
         }
-      }
-    );
+      })();
+      const fullUser = { ...profile, ...persisted, _supabase: true };
+      localStorage.setItem("nb_auth", JSON.stringify(fullUser));
+      if (!mounted) return;
+      setUser(fullUser);
+      setIsAuthenticated(true);
+      setIsLoading(false);
+    };
 
-    // 2. Check for existing Supabase session first, then nb_auth for demo users.
-    // Wrap in a timeout so a paused/unreachable Supabase project doesn't freeze the app.
-    const sessionTimeout = new Promise((resolve) => setTimeout(() => resolve({ data: { session: null } }), 4000));
-    Promise.race([supabase.auth.getSession(), sessionTimeout]).then(({ data: { session } }) => {
+    const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
       if (!mounted) return;
       if (session?.user) {
-        // Real user — handled by onAuthStateChange above; just release loading
+        applyAuthenticatedUser(session.user);
+        return;
+      }
+      try {
+        const stored = localStorage.getItem("nb_auth");
+        if (stored) {
+          const parsed = JSON.parse(stored);
+          setUser(parsed);
+          setIsAuthenticated(true);
+        } else {
+          setUser(null);
+          setIsAuthenticated(false);
+        }
+      } catch {
+        localStorage.removeItem("nb_auth");
+        setUser(null);
+        setIsAuthenticated(false);
+      } finally {
         setIsLoading(false);
-      } else {
-        // No Supabase session → try demo/mock nb_auth
+      }
+    });
+
+    const sessionTimeout = new Promise((resolve) => setTimeout(() => resolve({ data: { session: null } }), 4000));
+    Promise.race([supabase.auth.getSession(), sessionTimeout])
+      .then(({ data: { session } }) => {
+        if (!mounted) return;
+        if (session?.user) {
+          applyAuthenticatedUser(session.user);
+          return;
+        }
         try {
           const stored = localStorage.getItem("nb_auth");
           if (stored) {
@@ -269,40 +281,49 @@ export function AuthProvider({ children }) {
         } finally {
           setIsLoading(false);
         }
-      }
-    }).catch(() => {
-      // Supabase completely unreachable — still load the app in demo mode
-      if (!mounted) return;
-      try {
-        const stored = localStorage.getItem("nb_auth");
-        if (stored) { const parsed = JSON.parse(stored); setUser(parsed); setIsAuthenticated(true); }
-      } catch { localStorage.removeItem("nb_auth"); }
-      finally { setIsLoading(false); }
-    });
+      })
+      .catch(() => {
+        if (!mounted) return;
+        try {
+          const stored = localStorage.getItem("nb_auth");
+          if (stored) {
+            const parsed = JSON.parse(stored);
+            setUser(parsed);
+            setIsAuthenticated(true);
+          }
+        } catch {
+          localStorage.removeItem("nb_auth");
+        } finally {
+          setIsLoading(false);
+        }
+      });
 
     return () => {
       mounted = false;
-      subscription.unsubscribe();
+      listener?.subscription?.unsubscribe?.();
     };
   }, []);
 
-  // ── Real Supabase login (email + password) ─
-  // Used by the sign-in form.  Demo cards still use the mock login below.
   const loginWithEmail = useCallback(async (email, password) => {
     const { data, error } = await supabase.auth.signInWithPassword({ email, password });
     if (error) throw new Error(error.message);
+
     const profile = buildProfileFromSupabase(data.user);
     const persisted = (() => {
-      try { return JSON.parse(localStorage.getItem(`nb_prefs_${profile.id}`) || "{}"); }
-      catch { return {}; }
+      try {
+        return JSON.parse(localStorage.getItem(`nb_prefs_${profile.id}`) || "{}");
+      } catch {
+        return {};
+      }
     })();
-    return { ...profile, ...persisted };
+
+    const fullUser = { ...profile, ...persisted, _supabase: true };
+    localStorage.setItem("nb_auth", JSON.stringify(fullUser));
+    setUser(fullUser);
+    setIsAuthenticated(true);
+    return fullUser;
   }, []);
 
-  // ── Real Supabase sign-up ───────────────────
-  // Stores name + role in user_metadata so buildProfileFromSupabase picks them up.
-  // Supabase sends a confirmation email; returns { needsConfirmation: true } when
-  // email confirmation is required, or the full profile when auto-confirm is on.
   const signUpWithEmail = useCallback(async (email, password, name, role = "user") => {
     const { data, error } = await supabase.auth.signUp({
       email,
@@ -311,30 +332,72 @@ export function AuthProvider({ children }) {
         data: { name, role, disorders: [] },
       },
     });
+
     if (error) throw new Error(error.message);
-    // identities array is empty when the email already exists
+
     if (data.user && data.user.identities?.length === 0) {
       throw new Error("An account with this email already exists. Please sign in.");
     }
-    // If Supabase requires email confirmation, the session will be null
+
     if (!data.session) {
       return { needsConfirmation: true };
     }
+
     const profile = buildProfileFromSupabase(data.user);
-    return { ...profile, needsConfirmation: false };
+    localStorage.setItem("nb_auth", JSON.stringify(profile));
+    setUser(profile);
+    setIsAuthenticated(true);
+    return profile;
   }, []);
 
-  // ── mock login (demo cards only) ───────────
   const login = useCallback((role, options = {}) => {
     return new Promise((resolve, reject) => {
       setTimeout(() => {
         const accountKey = options.accountKey || resolveMockAccountKey(role, options);
-        const mockUser = MOCK_USERS[accountKey];
+        const mockUser = MOCK_USERS[accountKey] || MOCK_USERS[role];
+
+=======
+  // Hydrate from localStorage on mount
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem("nb_auth");
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        setUser(parsed);
+        setIsAuthenticated(true);
+      }
+    } catch {
+      localStorage.removeItem("nb_auth");
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  // ── mock login ─────────────────────────────
+  // Returns a Promise so the Login page can await it and show a spinner.
+  // Swap the setTimeout internals for a real fetch() when backend is ready.
+  const login = useCallback((role, options = {}) => {
+    return new Promise((resolve, reject) => {
+      setTimeout(() => {
+        const normalizedEmail = String(options.email || "").toLowerCase().trim();
+        const normalizedCareLink = String(options.careLinkId || "").toUpperCase().trim();
+        const accountKey =
+          options.accountKey ||
+          (normalizedEmail.includes("neha") || normalizedCareLink === "CL-RIYA-0088"
+            ? "guardian_asd_anxiety"
+            : normalizedEmail.includes("riya")
+            ? role === "guardian"
+              ? "guardian_asd_anxiety"
+              : "user_asd_anxiety"
+            : role);
+
+        const mockUser = MOCK_USERS[accountKey] || MOCK_USERS[role];
+>>>>>>> Stashed changes
         if (!mockUser) {
           reject(new Error("Invalid role"));
           return;
         }
-        // Merge any persisted user prefs from previous session
+
         const persisted = (() => {
           try {
             return JSON.parse(localStorage.getItem(`nb_prefs_${mockUser.id}`) || "{}");
@@ -342,42 +405,60 @@ export function AuthProvider({ children }) {
             return {};
           }
         })();
-        const fullUser = { ...mockUser, ...persisted };
+
+        const fullUser = { ...mockUser, ...persisted, _supabase: false };
         localStorage.setItem("nb_auth", JSON.stringify(fullUser));
         setUser(fullUser);
         setIsAuthenticated(true);
         resolve(fullUser);
-      }, 900); // simulates network latency
+      }, 900);
     });
   }, []);
 
-  // ── Guardian: link a ward via Care-Link ID ──
-  // In production: POST /api/guardian/link-ward { careLinkId }
   const linkWard = useCallback((careLinkId) => {
     return new Promise((resolve, reject) => {
       setTimeout(() => {
-        const wardId = CARE_LINK_REGISTRY[careLinkId.trim().toUpperCase()];
+        const wardId = CARE_LINK_REGISTRY[String(careLinkId || "").trim().toUpperCase()];
         if (!wardId) {
           reject(new Error("Care-Link ID not found. Please check and try again."));
           return;
         }
+
         setUser((prev) => {
           const updated = {
             ...prev,
-            linkedWardIds: [...new Set([...(prev.linkedWardIds ?? []), wardId])],
+            linkedWardIds: [...new Set([...(prev?.linkedWardIds ?? []), wardId])],
           };
           localStorage.setItem("nb_auth", JSON.stringify(updated));
           return updated;
         });
+
         resolve(wardId);
       }, 700);
     });
   }, []);
 
-  // ── Guardian: post a journal note to a ward ─
   const postGuardianNote = useCallback((wardId, text) => {
     return new Promise((resolve) => {
       setTimeout(() => {
+<<<<<<< Updated upstream
+        const key = `nb_guardian_notes_${wardId}`;
+        const existing = (() => {
+          try {
+            return JSON.parse(localStorage.getItem(key) || "[]");
+          } catch {
+            return [];
+          }
+        })();
+
+=======
+        // In production this writes to backend; here we store in localStorage
+        const key = `nb_guardian_notes_${wardId}`;
+        const existing = (() => {
+          try { return JSON.parse(localStorage.getItem(key) || "[]"); }
+          catch { return []; }
+        })();
+>>>>>>> Stashed changes
         const note = {
           id: `gn-${Date.now()}`,
           from: "guardian",
@@ -385,46 +466,54 @@ export function AuthProvider({ children }) {
           ts: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
           private: false,
         };
-        pushWardNote(wardId, { from: "guardian", text, isPrivate: false });
+<<<<<<< Updated upstream
+
+        localStorage.setItem(key, JSON.stringify([note, ...existing]));
+        pushWardNote(wardId, { from: "guardian", text, wardName: "Ward", isPrivate: false });
+=======
+        localStorage.setItem(key, JSON.stringify([note, ...existing]));
+>>>>>>> Stashed changes
         resolve(note);
       }, 400);
     });
   }, []);
 
+<<<<<<< Updated upstream
+=======
   // ── logout ─────────────────────────────────
-  const logout = useCallback(async () => {
-    // Sign out from Supabase (no-op if not a real session)
-    await supabase.auth.signOut().catch(() => {});
+>>>>>>> Stashed changes
+  const logout = useCallback(() => {
     localStorage.removeItem("nb_auth");
+    supabase.auth.signOut().catch(() => {});
     setUser(null);
     setIsAuthenticated(false);
   }, []);
 
-  // ── update user profile (persists) ─────────
   const updateUser = useCallback((patch) => {
     setUser((prev) => {
+      if (!prev) return prev;
       const updated = { ...prev, ...patch };
       localStorage.setItem("nb_auth", JSON.stringify(updated));
       localStorage.setItem(`nb_prefs_${prev.id}`, JSON.stringify(patch));
-      // For real Supabase users, sync to user_metadata so it persists server-side
-      if (prev?._supabase) {
-        supabase.auth.updateUser({ data: patch }).catch(() => {});
-      }
       return updated;
     });
   }, []);
 
+<<<<<<< Updated upstream
+=======
   // ── update selected disorders + recompute features
+  // Returns a Promise so callers can await it (e.g. onboarding page).
+>>>>>>> Stashed changes
   const updateDisorders = useCallback((newDisorders) => {
     return new Promise((resolve) => {
       setUser((prev) => {
+        if (!prev) {
+          resolve(null);
+          return prev;
+        }
         const updated = { ...prev, disorders: newDisorders };
         localStorage.setItem("nb_auth", JSON.stringify(updated));
         localStorage.setItem(`nb_prefs_${prev.id}`, JSON.stringify({ disorders: newDisorders }));
-        // Sync to Supabase user_metadata for real users so it survives re-login
-        if (prev?._supabase) {
-          supabase.auth.updateUser({ data: { disorders: newDisorders } }).catch(() => {});
-        }
         resolve(updated);
         return updated;
       });
@@ -436,15 +525,18 @@ export function AuthProvider({ children }) {
     role: user?.role ?? null,
     isAuthenticated,
     isLoading,
-    // ── Disorder-aware feature system ──────────
     disorders,
     enabledFeatures,
     hasFeature,
     updateDisorders,
+<<<<<<< Updated upstream
+    login,
+    loginWithEmail,
+    signUpWithEmail,
+=======
     // ── Core auth ──────────────────────────────
-    login,           // mock demo cards
-    loginWithEmail,  // real Supabase sign-in form
-    signUpWithEmail, // real Supabase sign-up form
+    login,
+>>>>>>> Stashed changes
     logout,
     updateUser,
     linkWard,
@@ -454,9 +546,6 @@ export function AuthProvider({ children }) {
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
 
-// ─────────────────────────────────────────────
-//  Hook
-// ─────────────────────────────────────────────
 export function useAuth() {
   const ctx = useContext(AuthContext);
   if (!ctx) throw new Error("useAuth must be used inside <AuthProvider>");

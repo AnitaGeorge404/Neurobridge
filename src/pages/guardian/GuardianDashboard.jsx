@@ -1,14 +1,13 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Heart, Bell, BookOpen, FileText, ChevronRight, AlertTriangle,
   CheckCircle2, Info, MessageSquarePlus, LogOut, Users,
-  ShieldAlert, Sparkles, BarChart2, Link2,
+  ShieldAlert, Sparkles, BarChart2, Link2, ListChecks, Plus, Pencil, Trash2,
 } from "lucide-react";
 import { useAuth, MOCK_WARD_ACTIVITY } from "@/context/AuthContext";
-import { loadWardTasks, pushTaskNotification, saveWardTasks } from "@/lib/wardTaskStore";
-import { loadWardSyncData } from "@/lib/careSyncStore";
+import { loadWardTasks, saveWardTasks } from "@/lib/wardTaskStore";
 
 // ─────────────────────────────────────────────
 //  Palette helpers (lavender / slate)
@@ -17,8 +16,6 @@ const PROFILE_COLORS = {
   ocd:         { bg: "bg-violet-100 dark:bg-violet-900/30", text: "text-violet-700 dark:text-violet-300" },
   dyslexia:    { bg: "bg-emerald-100 dark:bg-emerald-900/30", text: "text-emerald-700 dark:text-emerald-300" },
   adhd:        { bg: "bg-amber-100 dark:bg-amber-900/30", text: "text-amber-700 dark:text-amber-300" },
-  asd:         { bg: "bg-sky-100 dark:bg-sky-900/30", text: "text-sky-700 dark:text-sky-300" },
-  anxiety:     { bg: "bg-rose-100 dark:bg-rose-900/30", text: "text-rose-700 dark:text-rose-300" },
   default:     { bg: "bg-slate-100 dark:bg-slate-800", text: "text-slate-700 dark:text-slate-300" },
 };
 
@@ -81,7 +78,7 @@ function SectionTitle({ icon: Icon, children, color = "text-violet-500" }) {
 //  WardStats — the "back" of the flip card
 // ─────────────────────────────────────────────
 function WardStats({ ward, onBack }) {
-  const data = ward.data;
+  const data = MOCK_WARD_ACTIVITY[ward.id];
   const profile = ward.profile || "default";
   const pal = PROFILE_COLORS[profile] || PROFILE_COLORS.default;
 
@@ -137,7 +134,8 @@ function WardStats({ ward, onBack }) {
 // ─────────────────────────────────────────────
 //  WardCard — summary card on the "front" face
 // ─────────────────────────────────────────────
-function WardCard({ wardId, data, onFlip }) {
+function WardCard({ wardId, onFlip }) {
+  const data = MOCK_WARD_ACTIVITY[wardId];
   if (!data) return null;
   const profile = data.profile || "default";
   const pal = PROFILE_COLORS[profile] || PROFILE_COLORS.default;
@@ -193,37 +191,44 @@ function WardCard({ wardId, data, onFlip }) {
 export default function GuardianDashboard() {
   const { user, logout, postGuardianNote } = useAuth();
   const navigate = useNavigate();
+  const wardIds = user?.linkedWardIds ?? [];
 
   const [activeTab, setActiveTab] = useState("overview");
   const [flippedWardId, setFlippedWardId] = useState(null);
   const [journalText, setJournalText] = useState("");
-  const [journalWardId, setJournalWardId] = useState(user?.linkedWardIds?.[0] ?? null);
+  const [journalWardId, setJournalWardId] = useState(wardIds[0] ?? null);
   const [noteSent, setNoteSent] = useState(false);
   const [resolvedAlerts, setResolvedAlerts] = useState([]);
-  const [taskWardId, setTaskWardId] = useState(user?.linkedWardIds?.[0] ?? null);
-  const [newTaskTitle, setNewTaskTitle] = useState("");
-  const [newTaskTime, setNewTaskTime] = useState("");
+  const [taskWardId, setTaskWardId] = useState(wardIds[0] ?? null);
+  const [tasksByWard, setTasksByWard] = useState(() => loadWardTasks(wardIds));
+  const [taskDraft, setTaskDraft] = useState({ title: "", time: "" });
   const [editingTaskId, setEditingTaskId] = useState(null);
-  const [editingTaskTitle, setEditingTaskTitle] = useState("");
-  const [editingTaskTime, setEditingTaskTime] = useState("");
-  const [wardTasks, setWardTasks] = useState({});
-  const [syncTick, setSyncTick] = useState(0);
-
-  const wardIds = user?.linkedWardIds ?? [];
-  const wardDataById = useMemo(
-    () =>
-      wardIds.reduce((acc, id) => {
-        acc[id] = loadWardSyncData(id, MOCK_WARD_ACTIVITY[id]);
-        return acc;
-      }, {}),
-    [syncTick, wardIds.join("|")],
-  );
+  const [editDraft, setEditDraft] = useState({ title: "", time: "" });
   const allAlerts = wardIds.flatMap(
-    (id) => (wardDataById[id]?.alerts ?? []).map((a) => ({ ...a, wardId: id, wardName: wardDataById[id]?.name }))
+    (id) => (MOCK_WARD_ACTIVITY[id]?.alerts ?? []).map((a) => ({ ...a, wardId: id, wardName: MOCK_WARD_ACTIVITY[id]?.name }))
   );
   const allNotes = wardIds.flatMap(
-    (id) => (wardDataById[id]?.journalNotes ?? []).map((n) => ({ ...n, wardId: id, wardName: wardDataById[id]?.name }))
+    (id) => (MOCK_WARD_ACTIVITY[id]?.journalNotes ?? []).map((n) => ({ ...n, wardId: id, wardName: MOCK_WARD_ACTIVITY[id]?.name }))
   );
+  const activeWardTasks = taskWardId ? tasksByWard[taskWardId] ?? [] : [];
+
+  useEffect(() => {
+    const hydrated = loadWardTasks(wardIds);
+    setTasksByWard(hydrated);
+
+    if (wardIds.length === 0) {
+      setJournalWardId(null);
+      setTaskWardId(null);
+      return;
+    }
+
+    if (!wardIds.includes(journalWardId)) {
+      setJournalWardId(wardIds[0]);
+    }
+    if (!wardIds.includes(taskWardId)) {
+      setTaskWardId(wardIds[0]);
+    }
+  }, [user?.id]);
 
   async function handleSendNote() {
     if (!journalText.trim() || !journalWardId) return;
@@ -238,134 +243,64 @@ export default function GuardianDashboard() {
     navigate("/login");
   }
 
+  function updateWardTasks(wardId, nextTasks) {
+    const next = {
+      ...tasksByWard,
+      [wardId]: nextTasks,
+    };
+    setTasksByWard(next);
+    saveWardTasks(next);
+  }
+
+  function handleAddTask() {
+    if (!taskWardId || !taskDraft.title.trim()) return;
+    const task = {
+      id: `g-${Date.now()}`,
+      title: taskDraft.title.trim(),
+      time: taskDraft.time.trim(),
+      done: false,
+    };
+    updateWardTasks(taskWardId, [task, ...activeWardTasks]);
+    setTaskDraft({ title: "", time: "" });
+  }
+
+  function handleDeleteTask(taskId) {
+    if (!taskWardId) return;
+    const filtered = activeWardTasks.filter((task) => task.id !== taskId);
+    updateWardTasks(taskWardId, filtered);
+    if (editingTaskId === taskId) {
+      setEditingTaskId(null);
+      setEditDraft({ title: "", time: "" });
+    }
+  }
+
+  function handleStartEditTask(task) {
+    setEditingTaskId(task.id);
+    setEditDraft({ title: task.title ?? "", time: task.time ?? "" });
+  }
+
+  function handleSaveEditTask() {
+    if (!taskWardId || !editingTaskId || !editDraft.title.trim()) return;
+    const updated = activeWardTasks.map((task) => {
+      if (task.id !== editingTaskId) return task;
+      return {
+        ...task,
+        title: editDraft.title.trim(),
+        time: editDraft.time.trim(),
+      };
+    });
+    updateWardTasks(taskWardId, updated);
+    setEditingTaskId(null);
+    setEditDraft({ title: "", time: "" });
+  }
+
   const tabs = [
     { id: "overview",   label: "Day-at-a-Glance", icon: Sparkles },
-    { id: "tasks",      label: "Tasks",            icon: CheckCircle2 },
+    { id: "tasks",      label: "Tasks",            icon: ListChecks },
     { id: "alerts",     label: "Alerts",           icon: Bell },
     { id: "journal",    label: "Shared Journal",   icon: BookOpen },
     { id: "export",     label: "Reports",          icon: FileText },
   ];
-
-  useEffect(() => {
-    setWardTasks(loadWardTasks(wardIds));
-  }, [user?.id, wardIds.join("|")]);
-
-  useEffect(() => {
-    if (!Object.keys(wardTasks).length) return;
-    saveWardTasks(wardTasks);
-  }, [wardTasks]);
-
-  useEffect(() => {
-    if (!taskWardId && wardIds.length) {
-      setTaskWardId(wardIds[0]);
-    }
-  }, [taskWardId, wardIds]);
-
-  useEffect(() => {
-    const refresh = () => setSyncTick((value) => value + 1);
-    const timer = setInterval(refresh, 2000);
-    window.addEventListener("storage", refresh);
-    return () => {
-      clearInterval(timer);
-      window.removeEventListener("storage", refresh);
-    };
-  }, []);
-
-  const selectedWardTasks = taskWardId ? wardTasks[taskWardId] || [] : [];
-
-  function addTask() {
-    if (!taskWardId) return;
-    const title = newTaskTitle.trim();
-    if (!title) return;
-    const task = {
-      id: `g-task-${Date.now()}`,
-      title,
-      time: newTaskTime.trim() || "",
-      done: false,
-    };
-    setWardTasks((prev) => ({
-      ...prev,
-      [taskWardId]: [task, ...(prev[taskWardId] || [])],
-    }));
-    pushTaskNotification(taskWardId, {
-      type: "task-added",
-      title: "New task assigned",
-      message: `${user?.name || "Guardian"} added: ${title}`,
-    });
-    setNewTaskTitle("");
-    setNewTaskTime("");
-  }
-
-  function toggleTaskDone(taskId) {
-    if (!taskWardId) return;
-    const task = (wardTasks[taskWardId] || []).find((item) => item.id === taskId);
-    setWardTasks((prev) => ({
-      ...prev,
-      [taskWardId]: (prev[taskWardId] || []).map((task) =>
-        task.id === taskId ? { ...task, done: !task.done } : task,
-      ),
-    }));
-    if (task) {
-      pushTaskNotification(taskWardId, {
-        type: "task-status",
-        title: "Task status changed",
-        message: `${user?.name || "Guardian"} marked "${task.title}" as ${task.done ? "pending" : "completed"}.`,
-      });
-    }
-  }
-
-  function removeTask(taskId) {
-    if (!taskWardId) return;
-    const task = (wardTasks[taskWardId] || []).find((item) => item.id === taskId);
-    setWardTasks((prev) => ({
-      ...prev,
-      [taskWardId]: (prev[taskWardId] || []).filter((task) => task.id !== taskId),
-    }));
-    if (task) {
-      pushTaskNotification(taskWardId, {
-        type: "task-removed",
-        title: "Task removed",
-        message: `${user?.name || "Guardian"} removed: ${task.title}`,
-      });
-    }
-  }
-
-  function startEdit(task) {
-    setEditingTaskId(task.id);
-    setEditingTaskTitle(task.title || "");
-    setEditingTaskTime(task.time || "");
-  }
-
-  function saveEdit() {
-    if (!taskWardId || !editingTaskId) return;
-    const title = editingTaskTitle.trim();
-    if (!title) return;
-    const taskBefore = (wardTasks[taskWardId] || []).find((task) => task.id === editingTaskId);
-    setWardTasks((prev) => ({
-      ...prev,
-      [taskWardId]: (prev[taskWardId] || []).map((task) =>
-        task.id === editingTaskId
-          ? { ...task, title, time: editingTaskTime.trim() || "" }
-          : task,
-      ),
-    }));
-    if (taskBefore) {
-      pushTaskNotification(taskWardId, {
-        type: "task-updated",
-        title: "Task updated",
-        message: `${user?.name || "Guardian"} updated "${taskBefore.title}".`,
-      });
-    }
-    setEditingTaskId(null);
-    setEditingTaskTitle("");
-    setEditingTaskTime("");
-  }
-
-  function cancelEdit() {
-    setEditingTaskId(null);
-    setEditingTaskTitle("");
-    setEditingTaskTime("");
-  }
 
   return (
     <motion.div
@@ -442,111 +377,18 @@ export default function GuardianDashboard() {
                 front={
                   <WardCard
                     wardId={wardId}
-                    data={wardDataById[wardId]}
                     onFlip={(id) => setFlippedWardId(id)}
                   />
                 }
                 back={
                   <WardStats
-                    ward={{ id: wardId, profile: wardDataById[wardId]?.profile, data: wardDataById[wardId] }}
+                    ward={{ id: wardId, profile: MOCK_WARD_ACTIVITY[wardId]?.profile }}
                     onBack={() => setFlippedWardId(null)}
                   />
                 }
               />
             );
           })}
-        </motion.div>
-      )}
-
-      {/* ════════════════════════════════════ */}
-      {/* TAB: TASKS                           */}
-      {/* ════════════════════════════════════ */}
-      {activeTab === "tasks" && (
-        <motion.div key="tasks" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-5">
-          <SectionTitle icon={CheckCircle2} color="text-violet-500">Guardian Task Manager</SectionTitle>
-
-          <div className="neuro-card p-5 space-y-3">
-            <p className="text-sm text-muted-foreground">Manage schedules for each linked ward (add, edit, remove, complete).</p>
-
-            <div className="flex gap-2 flex-wrap">
-              {wardIds.map((id) => (
-                <button
-                  key={id}
-                  onClick={() => setTaskWardId(id)}
-                  className={`text-xs px-3 py-1.5 rounded-xl border transition font-medium ${
-                    taskWardId === id
-                      ? "bg-violet-500/15 border-violet-400/50 text-violet-500"
-                      : "border-border text-muted-foreground hover:border-violet-300/40"
-                  }`}
-                >
-                  {wardDataById[id]?.name}
-                </button>
-              ))}
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
-              <input
-                type="text"
-                value={newTaskTitle}
-                onChange={(e) => setNewTaskTitle(e.target.value)}
-                placeholder="Task title"
-                className="w-full rounded-xl border border-border bg-background px-3 py-2 text-sm"
-              />
-              <input
-                type="time"
-                value={newTaskTime}
-                onChange={(e) => setNewTaskTime(e.target.value)}
-                className="w-full rounded-xl border border-border bg-background px-3 py-2 text-sm"
-              />
-              <button onClick={addTask} className="neuro-btn text-sm">Add Task</button>
-            </div>
-
-            <div className="space-y-2">
-              {selectedWardTasks.length === 0 && (
-                <p className="text-sm text-muted-foreground">No tasks yet for this ward.</p>
-              )}
-              {selectedWardTasks.map((task) => (
-                <div key={task.id} className="rounded-xl border p-3 bg-background/40">
-                  {editingTaskId === task.id ? (
-                    <div className="space-y-2">
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                        <input
-                          type="text"
-                          value={editingTaskTitle}
-                          onChange={(e) => setEditingTaskTitle(e.target.value)}
-                          className="w-full rounded-xl border border-border bg-background px-3 py-2 text-sm"
-                        />
-                        <input
-                          type="time"
-                          value={editingTaskTime}
-                          onChange={(e) => setEditingTaskTime(e.target.value)}
-                          className="w-full rounded-xl border border-border bg-background px-3 py-2 text-sm"
-                        />
-                      </div>
-                      <div className="flex gap-2">
-                        <button onClick={saveEdit} className="neuro-btn text-xs px-3 py-1.5">Save</button>
-                        <button onClick={cancelEdit} className="neuro-btn-outline text-xs px-3 py-1.5">Cancel</button>
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="flex items-center justify-between gap-2 flex-wrap">
-                      <div>
-                        <p className={`font-medium ${task.done ? "line-through text-muted-foreground" : ""}`}>{task.title}</p>
-                        <p className="text-xs text-muted-foreground">{task.time || "No time set"}</p>
-                      </div>
-                      <div className="flex gap-2 flex-wrap">
-                        <button onClick={() => toggleTaskDone(task.id)} className="neuro-btn-outline text-xs px-3 py-1.5">
-                          {task.done ? "Completed" : "Mark Complete"}
-                        </button>
-                        <button onClick={() => startEdit(task)} className="neuro-btn-outline text-xs px-3 py-1.5">Edit</button>
-                        <button onClick={() => removeTask(task.id)} className="neuro-btn-outline text-xs px-3 py-1.5 text-red-500 border-red-400/30">Remove</button>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              ))}
-            </div>
-          </div>
         </motion.div>
       )}
 
@@ -601,6 +443,138 @@ export default function GuardianDashboard() {
       )}
 
       {/* ════════════════════════════════════ */}
+      {/* TAB: TASKS                           */}
+      {/* ════════════════════════════════════ */}
+      {activeTab === "tasks" && (
+        <motion.div key="tasks" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-5">
+          <SectionTitle icon={ListChecks} color="text-violet-500">Task Management</SectionTitle>
+
+          <div className="neuro-card p-5 space-y-3 bg-gradient-to-br from-violet-50/40 to-slate-50/40 dark:from-violet-900/10 dark:to-slate-900/10">
+            <div className="flex items-center justify-between gap-3 flex-wrap">
+              <p className="text-sm font-medium text-foreground">Manage shared ASD routine tasks for your ward</p>
+              <button
+                onClick={() => navigate("/asd")}
+                className="text-xs px-3 py-1.5 rounded-xl border border-violet-300/40 text-violet-600 dark:text-violet-300 hover:bg-violet-500/10 transition"
+              >
+                Open ASD Manager
+              </button>
+            </div>
+
+            <div className="flex gap-2 flex-wrap">
+              {wardIds.map((id) => (
+                <button
+                  key={id}
+                  onClick={() => setTaskWardId(id)}
+                  className={`text-xs px-3 py-1.5 rounded-xl border transition font-medium ${
+                    taskWardId === id
+                      ? "bg-violet-500/15 border-violet-400/50 text-violet-500"
+                      : "border-border text-muted-foreground hover:border-violet-300/40"
+                  }`}
+                >
+                  {MOCK_WARD_ACTIVITY[id]?.name}
+                </button>
+              ))}
+            </div>
+
+            <div className="grid gap-2 sm:grid-cols-3">
+              <input
+                type="text"
+                value={taskDraft.title}
+                onChange={(e) => setTaskDraft((prev) => ({ ...prev, title: e.target.value }))}
+                placeholder="Task title"
+                className="sm:col-span-2 rounded-xl border border-border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-violet-400/50"
+              />
+              <input
+                type="time"
+                value={taskDraft.time}
+                onChange={(e) => setTaskDraft((prev) => ({ ...prev, time: e.target.value }))}
+                className="rounded-xl border border-border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-violet-400/50"
+              />
+            </div>
+
+            <motion.button
+              whileTap={{ scale: 0.97 }}
+              onClick={handleAddTask}
+              disabled={!taskDraft.title.trim() || !taskWardId}
+              className="neuro-btn text-sm flex items-center gap-2 disabled:opacity-50"
+            >
+              <Plus className="w-4 h-4" /> Add Task
+            </motion.button>
+          </div>
+
+          <div className="space-y-3">
+            {activeWardTasks.length === 0 ? (
+              <div className="neuro-card p-6 text-sm text-muted-foreground text-center">
+                No tasks yet for this ward. Add one above to begin shared planning.
+              </div>
+            ) : (
+              activeWardTasks.map((task) => (
+                <div key={task.id} className="neuro-card p-4 space-y-3">
+                  {editingTaskId === task.id ? (
+                    <>
+                      <div className="grid gap-2 sm:grid-cols-3">
+                        <input
+                          type="text"
+                          value={editDraft.title}
+                          onChange={(e) => setEditDraft((prev) => ({ ...prev, title: e.target.value }))}
+                          className="sm:col-span-2 rounded-xl border border-border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-violet-400/50"
+                        />
+                        <input
+                          type="time"
+                          value={editDraft.time}
+                          onChange={(e) => setEditDraft((prev) => ({ ...prev, time: e.target.value }))}
+                          className="rounded-xl border border-border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-violet-400/50"
+                        />
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={handleSaveEditTask}
+                          disabled={!editDraft.title.trim()}
+                          className="text-xs px-3 py-1.5 rounded-xl bg-violet-500/15 text-violet-600 dark:text-violet-300 disabled:opacity-50"
+                        >
+                          Save
+                        </button>
+                        <button
+                          onClick={() => {
+                            setEditingTaskId(null);
+                            setEditDraft({ title: "", time: "" });
+                          }}
+                          className="text-xs px-3 py-1.5 rounded-xl border border-border text-muted-foreground"
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    </>
+                  ) : (
+                    <div className="flex items-start justify-between gap-3">
+                      <div>
+                        <p className="text-sm font-medium">{task.title}</p>
+                        <p className="text-xs text-muted-foreground mt-1">{task.time || "No time set"}</p>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={() => handleStartEditTask(task)}
+                          className="text-xs px-2.5 py-1.5 rounded-xl border border-border text-muted-foreground hover:text-foreground flex items-center gap-1"
+                        >
+                          <Pencil className="w-3.5 h-3.5" /> Edit
+                        </button>
+                        <button
+                          onClick={() => handleDeleteTask(task.id)}
+                          className="text-xs px-2.5 py-1.5 rounded-xl border border-red-300/40 text-red-500 hover:bg-red-500/10 flex items-center gap-1"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" /> Delete
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              ))
+            )}
+          </div>
+        </motion.div>
+      )}
+
+      {/* ════════════════════════════════════ */}
       {/* TAB: SHARED JOURNAL                  */}
       {/* ════════════════════════════════════ */}
       {activeTab === "journal" && (
@@ -626,7 +600,7 @@ export default function GuardianDashboard() {
                       : "border-border text-muted-foreground hover:border-violet-300/40"
                   }`}
                 >
-                  {wardDataById[id]?.name}
+                  {MOCK_WARD_ACTIVITY[id]?.name}
                 </button>
               ))}
             </div>
@@ -695,7 +669,7 @@ export default function GuardianDashboard() {
 
           <div className="grid gap-4 sm:grid-cols-2">
             {wardIds.map((wardId) => {
-              const data = wardDataById[wardId];
+              const data = MOCK_WARD_ACTIVITY[wardId];
               if (!data) return null;
               const pal = PROFILE_COLORS[data.profile] || PROFILE_COLORS.default;
               return (
