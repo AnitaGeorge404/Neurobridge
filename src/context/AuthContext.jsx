@@ -4,12 +4,6 @@ import { DISORDERS } from "@/lib/disorders";
 import { pushWardNote } from "@/lib/careSyncStore";
 import { supabase } from "@/lib/supabaseClient";
 
-// ─────────────────────────────────────────────
-//  Build a NeuroBridge profile from a Supabase
-//  auth user object (real sign-in path).
-//  Role + disorders are stored in user_metadata
-//  so clinicians can set them via the dashboard.
-// ─────────────────────────────────────────────
 function buildProfileFromSupabase(supabaseUser) {
   const meta    = supabaseUser.user_metadata  ?? {};
   const appMeta = supabaseUser.app_metadata   ?? {};
@@ -28,20 +22,12 @@ function buildProfileFromSupabase(supabaseUser) {
   };
 }
 
-// ─────────────────────────────────────────────
-//  Care-Link ID → ward user lookup
-//  Each user has a unique careLinkId that a
-//  guardian enters during onboarding.
-// ─────────────────────────────────────────────
 export const CARE_LINK_REGISTRY = {
   "CL-ARUN-0042": "nb-user-042",
   "CL-MEERA-0011": "nb-user-011",
   "CL-RIYA-0088": "nb-user-088",
 };
 
-// ─────────────────────────────────────────────
-//  Mock user database
-// ─────────────────────────────────────────────
 const MOCK_USERS = {
   admin: {
     id: "nb-admin-001",
@@ -126,10 +112,6 @@ const MOCK_USERS = {
   },
 };
 
-// ─────────────────────────────────────────────
-//  Ward profiles (used by guardian dashboard)
-//  In production this would be a secure API call.
-// ─────────────────────────────────────────────
 export const MOCK_WARD_ACTIVITY = {
   "nb-user-042": {
     name: "Arun Kumar",
@@ -223,9 +205,6 @@ function resolveMockAccountKey(role, options = {}) {
   return role;
 }
 
-// ─────────────────────────────────────────────
-//  Context
-// ─────────────────────────────────────────────
 const AuthContext = createContext(null);
 
 export function AuthProvider({ children }) {
@@ -233,8 +212,6 @@ export function AuthProvider({ children }) {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isLoading, setIsLoading] = useState(true); // hydrating from storage
 
-  // Derive disorders and enabled features from the user object.
-  // disorders: user.disorders ?? [selectedProfile] for backward compat
   const disorders = useMemo(() => {
     if (!user) return [];
     if (Array.isArray(user.disorders) && user.disorders.length > 0) return user.disorders;
