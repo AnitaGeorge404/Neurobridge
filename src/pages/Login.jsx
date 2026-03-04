@@ -120,7 +120,12 @@ export default function Login() {
           navigate(getRedirectPath(result), { replace: true });
         }
       } catch (e) {
-        setError(e.message || "Sign up failed. Please try again.");
+        const msg = e.message || "";
+        if (msg.toLowerCase().includes("networkerror") || msg.toLowerCase().includes("fetch")) {
+          setError("Cannot reach the server right now. The project may be paused. Use the Demo Access buttons below to get in.");
+        } else {
+          setError(msg || "Sign up failed. Please try again.");
+        }
       } finally {
         setLoadingRole(null);
       }
@@ -131,6 +136,13 @@ export default function Login() {
         const user = await loginWithEmail(email.trim(), password);
         navigate(getRedirectPath(user), { replace: true });
       } catch (e) {
+        const msg = e.message || "";
+        // Check if Supabase is unreachable (paused project = CORS/network failure)
+        if (msg.toLowerCase().includes("networkerror") || msg.toLowerCase().includes("fetch")) {
+          setError("Cannot reach the server — the Supabase project may be paused. Restore it at supabase.com/dashboard, or use Demo Access below.");
+          setLoadingRole(null);
+          return;
+        }
         const mappedDemo = inferDemoAccountByEmail(email, careLinkId);
         if (mappedDemo) {
           try {

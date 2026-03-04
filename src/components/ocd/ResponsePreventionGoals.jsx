@@ -12,7 +12,7 @@
 
 import { useState, useCallback, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Trophy, Target, Clock, RotateCcw, Plus, Flame, CheckCircle, Sparkles, ChevronDown, ChevronUp, RefreshCw, Zap } from "lucide-react";
+import { Target, Clock, RotateCcw, Plus, CheckCircle, Sparkles, ChevronUp, Zap } from "lucide-react";
 import { getGoals, updateGoal, addGoal, suggestGoals } from "@/lib/ocdStore";
 
 // ─── Divert-While-Waiting activities ──────────────────────────────────────────
@@ -33,9 +33,9 @@ const DIVERT_ACTIVITIES = [
   { icon: "🎨", text: "Mentally redecorate one room in your home however you want." },
 ];
 
-function StayBusyCard({ elapsed, totalSec }) {
+function StayBusyCard({ elapsed, totalSec, rotateSeed, onRotateNow }) {
   // Pick a new activity every 40s so it feels intentional, not distracting
-  const idx = Math.floor(elapsed / 40) % DIVERT_ACTIVITIES.length;
+  const idx = (Math.floor(elapsed / 40) + rotateSeed) % DIVERT_ACTIVITIES.length;
   const activity = DIVERT_ACTIVITIES[idx];
   const nextIn = 40 - (elapsed % 40);
 
@@ -60,21 +60,31 @@ function StayBusyCard({ elapsed, totalSec }) {
           <span className="text-base mr-1.5">{activity.icon}</span>
           {activity.text}
         </p>
+        <div className="flex justify-end">
+          <button
+            onClick={onRotateNow}
+            className="rounded-md border border-indigo-300 bg-white px-2 py-1 text-[11px] text-indigo-700 hover:bg-indigo-100 transition-colors"
+          >
+            Show another idea
+          </button>
+        </div>
       </motion.div>
     </AnimatePresence>
   );
 }
 
-const BADGE_TIERS = [
-  { min: 1,  label: "Starting",  color: "text-gray-500",   bg: "bg-gray-50 border-gray-300" },
-  { min: 3,  label: "Bronze",    color: "text-amber-600",   bg: "bg-amber-50 border-amber-300" },
-  { min: 7,  label: "Silver",    color: "text-gray-700",   bg: "bg-gray-100 border-gray-300" },
-  { min: 14, label: "Gold",      color: "text-yellow-600",  bg: "bg-yellow-50 border-yellow-300" },
-  { min: 30, label: "Diamond",   color: "text-cyan-700",    bg: "bg-cyan-50 border-cyan-200" },
+// Streak is tracked internally for escalation decisions but NOT shown as
+// a number — displaying streaks creates compulsive streak-checking behaviour.
+const CONSISTENCY_LABELS = [
+  { min: 0,  text: "Getting started",     color: "text-gray-500" },
+  { min: 3,  text: "Building consistency", color: "text-teal-600" },
+  { min: 7,  text: "Strong pattern",       color: "text-emerald-600" },
+  { min: 14, text: "Solid foundation",     color: "text-emerald-700" },
+  { min: 30, text: "Well established",     color: "text-emerald-800" },
 ];
 
-function getBadge(streak) {
-  return [...BADGE_TIERS].reverse().find((t) => streak >= t.min) ?? BADGE_TIERS[0];
+function getConsistencyLabel(streak) {
+  return [...CONSISTENCY_LABELS].reverse().find((t) => streak >= t.min) ?? CONSISTENCY_LABELS[0];
 }
 
 function ConfettiParticle({ i }) {
@@ -120,6 +130,7 @@ function GoalCard({ goal, onSuccess, onReset, onEscalate }) {
   const [elapsed, setElapsed]         = useState(0);
   const [done, setDone]               = useState(false);
   const [confetti, setConfetti]       = useState(0);
+  const [rotateSeed, setRotateSeed]   = useState(0);
   const intervalRef = useRef(null);
   const durationSec = goal.delayMinutes * 60;
 
@@ -135,42 +146,26 @@ function GoalCard({ goal, onSuccess, onReset, onEscalate }) {
   }, [timerActive, durationSec]);
 
   const handleSuccess = () => { setConfetti((c) => c + 1); onSuccess(goal.id); setDone(false); setElapsed(0); };
-  const handleReset   = () => { setDone(false); setElapsed(0); setTimerActive(false); onReset(goal.id); };
-  const badge = getBadge(goal.streak);
-  const successRate = goal.attemptCount > 0 ? Math.round((goal.successCount / goal.attemptCount) * 100) : null;
-
-  const probText = () => {
-    const h = new Date().getHours();
-    const morning = h >= 7 && h <= 10;
-    const base = successRate ?? 60;
-    const streakBoost = Math.min(goal.streak * 3, 20);
-    const timeBoost = morning ? 8 : 0;
-    const prob = Math.min(base + streakBoost + timeBoost, 97);
-    return `~${prob}% success probability now${morning ? " (morning window)" : ""}`;
-  };
-
+  const handleReset   = () => { setDone(false); setElapsed(0); setTimerActive(false); setRotateSeed(0); onReset(goal.id); };
+  // Consistency label — qualitative, no numbers visible to user
+  const consistency = getConsistencyLabel(goal.streak);
   const escalateTarget = goal.delayMinutes + 1;
 
   return (
-    <div className={`relative rounded-xl border p-4 space-y-3 overflow-hidden ${badge.bg}`}>
+    <div className="relative rounded-xl border border-gray-200 bg-white p-4 space-y-3 overflow-hidden">
       <ConfettiBurst trigger={confetti} />
       <div className="flex items-start justify-between gap-2">
         <div className="flex-1 min-w-0">
           <h4 className="text-sm font-semibold text-gray-800 leading-snug">{goal.title}</h4>
-          <div className="flex items-center gap-2 mt-1 flex-wrap">
-            <span className={`text-[10px] font-bold uppercase ${badge.color}`}>{badge.label}</span>
-            <span className="text-[10px] text-gray-400 flex items-center gap-0.5"><Flame size={10} />{goal.streak} streak</span>
-            {successRate !== null && <span className="text-[10px] text-gray-400">{successRate}% success</span>}
-          </div>
+          {/* Show qualitative consistency label — no streak number, no % */}
+          <p className={`text-[11px] mt-0.5 ${consistency.color}`}>{consistency.text}</p>
         </div>
-        <Trophy size={20} className={badge.color + " shrink-0"} />
       </div>
 
       {!timerActive && !done && (
         <div className="flex items-center gap-2 text-xs text-gray-500">
           <Clock size={12} />
-          <span>Delay: <strong className="text-gray-800">{goal.delayMinutes} min</strong></span>
-          <span className="ml-auto text-[10px] text-teal-600">{probText()}</span>
+          <span>Delay goal: <strong className="text-gray-800">{goal.delayMinutes} min</strong></span>
         </div>
       )}
 
@@ -185,7 +180,12 @@ function GoalCard({ goal, onSuccess, onReset, onEscalate }) {
               <p className="text-xs text-teal-700 mt-0.5">Stay with the discomfort. Uncertainty is tolerable.</p>
             </div>
           </div>
-          <StayBusyCard elapsed={elapsed} totalSec={durationSec} />
+          <StayBusyCard
+            elapsed={elapsed}
+            totalSec={durationSec}
+            rotateSeed={rotateSeed}
+            onRotateNow={() => setRotateSeed((s) => s + 1)}
+          />
         </div>
       )}
 
@@ -215,12 +215,13 @@ function GoalCard({ goal, onSuccess, onReset, onEscalate }) {
           <>
             <button onClick={handleSuccess}
               className="flex items-center gap-1.5 rounded-md bg-emerald-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-emerald-500 transition-colors">
-              <Sparkles size={12} /> Mark Success
+              <Sparkles size={12} /> Mark Complete
             </button>
-            {goal.streak >= 2 && (
+            {/* Escalation is optional and low-pressure — not a default CTA */}
+            {goal.streak >= 3 && (
               <button onClick={() => onEscalate(goal.id, escalateTarget)}
-                className="flex items-center gap-1.5 rounded-md border border-teal-500 px-3 py-1.5 text-xs text-teal-700 hover:bg-teal-50 transition-colors">
-                <ChevronUp size={12} /> Escalate to {escalateTarget}m
+                className="flex items-center gap-1.5 rounded-md border border-gray-300 px-3 py-1.5 text-xs text-gray-500 hover:bg-gray-50 transition-colors">
+                Try {escalateTarget}m next time
               </button>
             )}
           </>

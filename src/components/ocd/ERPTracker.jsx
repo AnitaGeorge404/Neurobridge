@@ -23,6 +23,17 @@ const GROUNDING_PROMPTS = [
   "The anxiety is not information about danger. It is your nervous system learning.",
 ];
 
+const WAIT_SUPPORT_ACTIONS = [
+  "Let your shoulders drop for one slow exhale.",
+  "Name 1 thing you can hear, 1 thing you can feel, 1 thing you can see.",
+  "Unclench your jaw and relax your tongue.",
+  "Press your feet into the floor for 5 seconds, then release.",
+  "Say: ‘I can feel this urge and still not respond.’",
+  "Move your attention to your breath for 3 cycles.",
+  "Look at one object and describe its shape and color.",
+  "Let your hands rest still for 10 seconds.",
+];
+
 // ─── Urge Wave Visual ─────────────────────────────────────────────────────────
 // An SVG arc that shows where in the habituation curve the person currently is.
 // Clinically: visualising the wave rising and falling helps the person trust they
@@ -94,6 +105,34 @@ function GroundingMicroPrompt({ elapsed }) {
       >
         {GROUNDING_PROMPTS[idx]}
       </motion.p>
+    </AnimatePresence>
+  );
+}
+
+function WaitSupportPanel({ elapsed, isPaused }) {
+  const idx = Math.floor(elapsed / 45) % WAIT_SUPPORT_ACTIONS.length;
+  const activity = WAIT_SUPPORT_ACTIONS[idx];
+  const rotateIn = 45 - (elapsed % 45);
+
+  return (
+    <AnimatePresence mode="wait">
+      <motion.div
+        key={`${idx}-${isPaused ? "paused" : "running"}`}
+        initial={{ opacity: 0, y: 6 }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0, y: -6 }}
+        transition={{ duration: 0.3 }}
+        className="rounded-lg border border-indigo-200 bg-indigo-50 px-3 py-2.5"
+      >
+        <div className="flex items-center gap-2 text-[10px] font-semibold uppercase tracking-widest text-indigo-600">
+          <span>While you wait</span>
+          <span className="ml-auto text-indigo-400 normal-case tracking-normal">next in {rotateIn}s</span>
+        </div>
+        <p className="mt-1 text-sm text-indigo-900 leading-snug">{activity}</p>
+        {isPaused && (
+          <p className="mt-1 text-[11px] text-indigo-700">Paused is okay. Press resume when you are ready.</p>
+        )}
+      </motion.div>
     </AnimatePresence>
   );
 }
@@ -254,6 +293,7 @@ export default function ERPTracker({ onSessionLogged }) {
                 </div>
                 <UrgeWave elapsed={elapsed} totalSec={activeItem.durationMin * 60} />
                 <GroundingMicroPrompt elapsed={elapsed} />
+                <WaitSupportPanel elapsed={elapsed} isPaused={isPaused} />
                 <CoachingBanner message={coaching} />
                 <div className="flex gap-3">
                   <button onClick={() => setIsPaused((p) => !p)}

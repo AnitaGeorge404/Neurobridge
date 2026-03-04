@@ -71,30 +71,61 @@ export default function GamifiedMotorExercises() {
     }
   };
 
+  // Show the session summary card after a round ends (not during)
+  const showSummary = !isPlaying && attempts > 0;
+
   return (
     <section className={styles.card} aria-labelledby="motor-title">
-      <h2 id="motor-title" className={styles.sectionTitle}>Gamified Motor Exercises</h2>
-      <p className={styles.helper}>Tap the moving target. Larger targets support motor planning and precision.</p>
+      <h2 id="motor-title" className={styles.sectionTitle}>Motor Coordination Practice</h2>
+      <p className={styles.helper}>
+        Tap the target when it appears. Take your time — this is practice, not a test.
+      </p>
 
-      <div className={styles.scoreBoard}>
-        <p>Time: {secondsLeft}s</p>
-        <p>Hits: {hits}</p>
-        <p>Accuracy: {accuracy}%</p>
-        <p>Best reaction: {bestReaction ? `${bestReaction}ms` : "--"}</p>
+      {/* Only show time remaining during active play — no live score to obsess over */}
+      {isPlaying && (
+        <p className={styles.liveTimer} aria-live="polite" aria-atomic="true">
+          {secondsLeft}s remaining
+        </p>
+      )}
+
+      <div className={styles.gameArena} onClick={registerMiss} role="application"
+        aria-label="Tap coordination practice area">
+        {isPlaying && (
+          <button
+            className={styles.targetButton}
+            style={{ left: `${target.x}%`, top: `${target.y}%` }}
+            onClick={hitTarget}
+            aria-label="Tap this target"
+          >
+            Tap
+          </button>
+        )}
+        {!isPlaying && !showSummary && (
+          <p className={styles.arenaPrompt} aria-hidden="true">Press start when ready</p>
+        )}
       </div>
 
-      <div className={styles.gameArena} onClick={registerMiss} role="application" aria-label="Tap the moving target game">
-        <button
-          className={styles.targetButton}
-          style={{ left: `${target.x}%`, top: `${target.y}%` }}
-          onClick={hitTarget}
-          aria-label="Moving tap target"
-        >
-          Tap
-        </button>
-      </div>
+      {/* End-of-session summary — compassionate, non-comparative */}
+      {showSummary && (
+        <div className={styles.sessionSummary} role="status" aria-live="polite">
+          <p className={styles.summaryLine}>
+            {accuracy >= 70
+              ? `Great coordination — you hit ${hits} out of ${attempts} targets.`
+              : accuracy >= 40
+              ? `Good effort — ${hits} hits. Coordination improves with gentle practice.`
+              : `You showed up and practised. That is what matters.`}
+          </p>
+          {bestReaction && (
+            <p className={styles.summarySubLine}>
+              Fastest tap: {bestReaction}ms — your reflexes are working.
+            </p>
+          )}
+        </div>
+      )}
 
-      <button className={styles.primaryButton} onClick={startGame}>Start 30s round</button>
+      <button className={styles.primaryButton} onClick={startGame}>
+        {showSummary ? "Practice again" : "Start practice"}
+      </button>
     </section>
   );
 }
