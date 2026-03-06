@@ -408,7 +408,12 @@ export function AuthProvider({ children }) {
           }
         })();
 
-        const fullUser = { ...mockUser, ...persisted, _supabase: false };
+        const fullUser = {
+          ...mockUser,
+          ...persisted,
+          onboardingCompleted: false,
+          _supabase: false,
+        };
         localStorage.setItem("nb_auth", JSON.stringify(fullUser));
         syncWardSettingsFromUser(fullUser);
         setUser(fullUser);

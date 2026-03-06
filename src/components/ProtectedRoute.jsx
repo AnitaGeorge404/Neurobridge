@@ -47,15 +47,10 @@ export default function ProtectedRoute({ children, role, feature }) {
 
   const isOnboardingRoute = location.pathname === "/onboarding/disorders";
 
-  // Demo users: always show module selector every login/session entry.
-  if (userRole === "user" && !user?._supabase && !isOnboardingRoute) {
-    return <Navigate to="/onboarding/disorders" replace />;
-  }
-
-  // Real users: only require onboarding until first successful completion.
+  // Require onboarding for users until completed.
+  // For demo users this is reset on each demo login; for real users it persists.
   if (
     userRole === "user" &&
-    user?._supabase &&
     !isOnboardingRoute &&
     !user?.onboardingCompleted
   ) {
