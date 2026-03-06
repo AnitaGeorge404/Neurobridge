@@ -169,7 +169,6 @@ const PROFILE_TO_DISORDER = {
   dyspraxia: "dyspraxia",
   dyscalculia: "dyscalculia",
   depression: "depression",
-  apd: "apd",
 };
 
 const getDefaultWardSettings = ({ wardId, user, role }) => {

@@ -9,7 +9,7 @@
  */
 
 import {
-  Brain, Zap, BookOpen, Calculator, Shield, Hand, Wind, Sparkles, Ear,
+  Brain, Zap, BookOpen, Calculator, Shield, Hand, Wind, Sparkles,
 } from "lucide-react";
 
 // ─────────────────────────────────────────────
@@ -24,7 +24,6 @@ export const DISORDERS = /** @type {const} */ ({
   ASD:         "asd",
   ANXIETY:     "anxiety",
   DEPRESSION:   "depression",
-  APD:         "apd",
 });
 
 // ─────────────────────────────────────────────
@@ -102,15 +101,6 @@ export const DISORDER_META = {
     color:       "bg-mode-depression",
     accent:      "text-fuchsia-600",
     path:        "/depression",
-  },
-  [DISORDERS.APD]: {
-    label:       "APD",
-    subtitle:    "Auditory Processing",
-    description: "Audio clarity tools, speech-to-text, and listening exercises.",
-    icon:        Ear,
-    color:       "bg-mode-apd",
-    accent:      "text-indigo-600",
-    path:        "/apd",
   },
 };
 

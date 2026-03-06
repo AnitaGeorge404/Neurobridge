@@ -1,6 +1,6 @@
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import {
-  Brain, Zap, BookOpen, Calculator, Shield, Hand, Ear, Sparkles,
+  Brain, Zap, BookOpen, Calculator, Shield, Hand, Sparkles,
   Home, ArrowLeftRight, User, Settings, ShieldCheck, LogOut, Heart, Wind,
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
@@ -15,7 +15,6 @@ const USER_NAV = [
   { title: "Dyscalculia", path: "/dyscalculia", icon: Calculator, featureKey: FEATURES.DYSCALCULIA },
   { title: "OCD",         path: "/ocd",         icon: Shield,     featureKey: FEATURES.OCD },
   { title: "Dyspraxia",   path: "/dyspraxia",   icon: Hand,       featureKey: FEATURES.DYSPRAXIA },
-  { title: "APD",         path: "/apd",         icon: Ear,        featureKey: FEATURES.APD },
   { title: "Anxiety",     path: "/anxiety",     icon: Wind,       featureKey: FEATURES.ANXIETY },
   { title: "Depression",  path: "/depression",   icon: Sparkles,   featureKey: FEATURES.DEPRESSION },
 ];

@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { Brain, Zap, BookOpen, Calculator, Shield, Hand, Wind, Sparkles, Ear, Settings } from "lucide-react";
+import { Brain, Zap, BookOpen, Calculator, Shield, Hand, Wind, Sparkles, Settings } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { FEATURES } from "@/lib/featureRegistry";
 import AdaptiveOutcomePanel from "@/components/adaptive/AdaptiveOutcomePanel";
@@ -14,7 +14,6 @@ const ALL_MODES = [
   { featureKey: FEATURES.DYSPRAXIA,   title: "Dyspraxia",   subtitle: "CoordiMate",           icon: Hand,       color: "bg-mode-dyspraxia",   path: "/dyspraxia" },
   { featureKey: FEATURES.ANXIETY,     title: "Anxiety",     subtitle: "CalmFlow Toolkit",     icon: Wind,       color: "bg-mode-anxiety",     path: "/anxiety" },
   { featureKey: FEATURES.DEPRESSION,   title: "Depression",  subtitle: "Mental Health",        icon: Sparkles,   color: "bg-mode-depression",   path: "/depression" },
-  { featureKey: FEATURES.APD,         title: "APD",         subtitle: "Auditory Processing",  icon: Ear,        color: "bg-mode-apd",         path: "/apd" },
 ];
 
 const Index = () => {

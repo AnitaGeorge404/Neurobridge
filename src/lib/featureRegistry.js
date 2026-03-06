@@ -25,7 +25,6 @@ export const FEATURES = /** @type {const} */ ({
   ASD:          "asd",
   ANXIETY:      "anxiety",
   DEPRESSION:    "depression",
-  APD:          "apd",
 
   // ── OCD sub-features ────────────────────────
   OCD_ERP_TRACKER:      "ocd.erp-tracker",
@@ -95,10 +94,6 @@ export const FEATURE_REGISTRY = {
   [FEATURES.DEPRESSION]: {
     label: "Depression Support",
     disorders: [DISORDERS.DEPRESSION],
-  },
-  [FEATURES.APD]: {
-    label: "Audio Support",
-    disorders: [DISORDERS.APD],
   },
 
   // ── OCD sub-features ────────────────────────
