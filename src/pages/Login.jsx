@@ -189,12 +189,12 @@ export default function Login() {
   }
 
   return (
-    <div className="relative min-h-screen w-full flex items-center justify-center overflow-hidden bg-gradient-to-br from-slate-950 via-slate-900 to-indigo-950">
+    <div className="relative min-h-screen w-full flex items-center justify-center overflow-hidden bg-gradient-to-br from-slate-50 via-white to-cyan-50/70">
       {/* Ambient blobs */}
       <div className="pointer-events-none absolute inset-0 overflow-hidden">
-        <div className="absolute -top-32 -left-32 w-96 h-96 rounded-full bg-primary/20 blur-3xl" />
-        <div className="absolute bottom-0 right-0 w-80 h-80 rounded-full bg-violet-500/15 blur-3xl" />
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] rounded-full bg-indigo-500/5 blur-3xl" />
+        <div className="absolute -top-32 -left-32 w-96 h-96 rounded-full bg-primary/10 blur-3xl" />
+        <div className="absolute bottom-0 right-0 w-80 h-80 rounded-full bg-violet-500/10 blur-3xl" />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] rounded-full bg-indigo-500/10 blur-3xl" />
       </div>
 
       <motion.div
@@ -203,7 +203,7 @@ export default function Login() {
         transition={{ duration: 0.5, ease: "easeOut" }}
         className="relative z-10 w-full max-w-md px-4 py-8"
       >
-        <div className="rounded-3xl border border-white/10 bg-white/5 backdrop-blur-2xl shadow-2xl p-8">
+        <div className="rounded-3xl border border-border bg-card/95 backdrop-blur-xl shadow-2xl p-8">
 
           {/* ── Email confirmation pending ─────── */}
           <AnimatePresence mode="wait">
@@ -217,9 +217,9 @@ export default function Login() {
                 <div className="w-16 h-16 rounded-2xl bg-emerald-500/20 flex items-center justify-center">
                   <MailCheck className="w-8 h-8 text-emerald-400" />
                 </div>
-                <h2 className="text-xl font-bold text-white">Check your inbox</h2>
-                <p className="text-sm text-white/50 leading-relaxed">
-                  We sent a confirmation link to <span className="text-white/80 font-medium">{email}</span>.
+                <h2 className="text-xl font-bold text-foreground">Check your inbox</h2>
+                <p className="text-sm text-muted-foreground leading-relaxed">
+                  We sent a confirmation link to <span className="text-foreground font-medium">{email}</span>.
                   Click it to activate your account, then come back and sign in.
                 </p>
                 <button
@@ -235,16 +235,16 @@ export default function Login() {
                 {/* Logo */}
                 <div className="flex flex-col items-center gap-3 mb-6">
                   <div className="w-14 h-14 rounded-2xl bg-primary flex items-center justify-center shadow-lg shadow-primary/30">
-                    <Brain className="w-7 h-7 text-white" />
+                    <Brain className="w-7 h-7 text-primary-foreground" />
                   </div>
                   <div className="text-center">
-                    <h1 className="text-2xl font-bold text-white tracking-tight">NeuroBridge</h1>
-                    <p className="text-sm text-white/50 mt-0.5">Neuro-inclusive care platform</p>
+                    <h1 className="text-2xl font-bold text-foreground tracking-tight">NeuroBridge</h1>
+                    <p className="text-sm text-muted-foreground mt-0.5">Neuro-inclusive care platform</p>
                   </div>
                 </div>
 
                 {/* ── Sign in / Sign up tab toggle ── */}
-                <div className="flex rounded-2xl border border-white/10 bg-white/5 p-1 gap-1 mb-5">
+                <div className="flex rounded-2xl border border-border bg-muted/40 p-1 gap-1 mb-5">
                   {[
                     { id: "signin", label: "Sign In",  icon: LogIn },
                     { id: "signup", label: "Sign Up",  icon: UserPlus },
@@ -255,7 +255,7 @@ export default function Login() {
                       className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-medium transition-all ${
                         mode === id
                           ? "bg-primary/20 border border-primary/40 text-primary"
-                          : "text-white/40 hover:text-white/70 hover:bg-white/5"
+                          : "text-muted-foreground hover:text-foreground hover:bg-card"
                       }`}
                     >
                       <Icon className="w-4 h-4" />
@@ -265,7 +265,7 @@ export default function Login() {
                 </div>
 
                 {/* ── Role toggle (sign-up shows all; sign-in shows user + guardian) ── */}
-                <div className="flex rounded-2xl border border-white/10 bg-white/5 p-1 gap-1 mb-2">
+                <div className="flex rounded-2xl border border-border bg-muted/40 p-1 gap-1 mb-2">
                   {(mode === "signup" ? ROLES : ROLES).map((r) => {
                     const Icon = r.icon;
                     const active = selectedRole === r.id;
@@ -276,7 +276,7 @@ export default function Login() {
                         className={`flex-1 flex flex-col items-center gap-1 py-2.5 px-2 rounded-xl text-xs font-medium transition-all ${
                           active
                             ? `${r.bg} ${r.border} border`
-                            : "text-white/40 hover:text-white/70 hover:bg-white/5"
+                            : "text-muted-foreground hover:text-foreground hover:bg-card"
                         }`}
                       >
                         <Icon className={`w-4 h-4 ${active ? r.iconColor : ""}`} />
@@ -293,7 +293,7 @@ export default function Login() {
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: 4 }}
                     transition={{ duration: 0.18 }}
-                    className="text-center text-xs text-white/40 mb-5"
+                    className="text-center text-xs text-muted-foreground mb-5"
                   >
                     {roleConfig.desc}
                   </motion.p>
@@ -311,13 +311,13 @@ export default function Login() {
                         exit={{ opacity: 0, height: 0 }}
                         className="space-y-1 overflow-hidden"
                       >
-                        <label className="text-xs font-medium text-white/60 uppercase tracking-widest">Full Name</label>
+                        <label className="text-xs font-medium text-muted-foreground uppercase tracking-widest">Full Name</label>
                         <input
                           type="text"
                           value={name}
                           onChange={(e) => setName(e.target.value)}
                           placeholder="Your name"
-                          className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-primary/60 transition"
+                          className="w-full rounded-xl border border-border bg-background px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/60 transition"
                         />
                       </motion.div>
                     )}
@@ -325,20 +325,20 @@ export default function Login() {
 
                   {/* Email */}
                   <div className="space-y-1">
-                    <label className="text-xs font-medium text-white/60 uppercase tracking-widest">Email</label>
+                    <label className="text-xs font-medium text-muted-foreground uppercase tracking-widest">Email</label>
                     <input
                       type="email"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                       placeholder="you@example.com"
                       autoComplete="email"
-                      className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-primary/60 transition"
+                      className="w-full rounded-xl border border-border bg-background px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/60 transition"
                     />
                   </div>
 
                   {/* Password */}
                   <div className="space-y-1">
-                    <label className="text-xs font-medium text-white/60 uppercase tracking-widest">Password</label>
+                    <label className="text-xs font-medium text-muted-foreground uppercase tracking-widest">Password</label>
                     <div className="relative">
                       <input
                         type={showPassword ? "text" : "password"}
@@ -346,12 +346,12 @@ export default function Login() {
                         onChange={(e) => setPassword(e.target.value)}
                         placeholder={mode === "signup" ? "Min. 8 characters" : "••••••••"}
                         autoComplete={mode === "signup" ? "new-password" : "current-password"}
-                        className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 pr-11 text-sm text-white placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-primary/60 transition"
+                        className="w-full rounded-xl border border-border bg-background px-4 py-3 pr-11 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/60 transition"
                       />
                       <button
                         type="button"
                         onClick={() => setShowPassword((v) => !v)}
-                        className="absolute right-3 top-1/2 -translate-y-1/2 text-white/40 hover:text-white/70 transition"
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition"
                       >
                         {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                       </button>
@@ -367,7 +367,7 @@ export default function Login() {
                         exit={{ opacity: 0, height: 0 }}
                         className="space-y-1 overflow-hidden"
                       >
-                        <label className="text-xs font-medium text-white/60 uppercase tracking-widest">Confirm Password</label>
+                        <label className="text-xs font-medium text-muted-foreground uppercase tracking-widest">Confirm Password</label>
                         <div className="relative">
                           <input
                             type={showConfirm ? "text" : "password"}
@@ -375,16 +375,16 @@ export default function Login() {
                             onChange={(e) => setConfirmPw(e.target.value)}
                             placeholder="Repeat password"
                             autoComplete="new-password"
-                            className={`w-full rounded-xl border bg-white/5 px-4 py-3 pr-11 text-sm text-white placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-primary/60 transition ${
+                            className={`w-full rounded-xl border bg-background px-4 py-3 pr-11 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/60 transition ${
                               confirmPw && confirmPw !== password
                                 ? "border-red-400/50"
-                                : "border-white/10"
+                                : "border-border"
                             }`}
                           />
                           <button
                             type="button"
                             onClick={() => setShowConfirm((v) => !v)}
-                            className="absolute right-3 top-1/2 -translate-y-1/2 text-white/40 hover:text-white/70 transition"
+                            className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition"
                           >
                             {showConfirm ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                           </button>
@@ -405,7 +405,7 @@ export default function Login() {
                         exit={{ opacity: 0, height: 0 }}
                         className="space-y-1 overflow-hidden"
                       >
-                        <label className="text-xs font-medium text-white/60 uppercase tracking-widest flex items-center gap-1.5">
+                        <label className="text-xs font-medium text-muted-foreground uppercase tracking-widest flex items-center gap-1.5">
                           <Link2 className="w-3 h-3" /> Ward's Care-Link ID
                         </label>
                         <input
@@ -413,9 +413,9 @@ export default function Login() {
                           value={careLinkId}
                           onChange={(e) => setCareLinkId(e.target.value)}
                           placeholder="e.g. CL-ARUN-0042"
-                          className="w-full rounded-xl border border-violet-400/30 bg-violet-400/5 px-4 py-3 text-sm text-white placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-violet-400/50 transition"
+                          className="w-full rounded-xl border border-violet-200 bg-violet-50/60 px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-violet-400/50 transition"
                         />
-                        <p className="text-[11px] text-violet-300/50 leading-tight">
+                        <p className="text-[11px] text-violet-600/80 leading-tight">
                           Provided by your ward's NeuroBridge account. Links your Care-Circle.
                         </p>
                       </motion.div>
@@ -452,9 +452,9 @@ export default function Login() {
 
                 {/* Divider */}
                 <div className="my-6 flex items-center gap-3">
-                  <div className="flex-1 h-px bg-white/10" />
-                  <span className="text-xs text-white/30">SheBuildsTech Demo Access</span>
-                  <div className="flex-1 h-px bg-white/10" />
+                  <div className="flex-1 h-px bg-border" />
+                  <span className="text-xs text-muted-foreground">SheBuildsTech Demo Access</span>
+                  <div className="flex-1 h-px bg-border" />
                 </div>
 
                 {/* Demo cards — all 3 roles */}
@@ -484,7 +484,7 @@ export default function Login() {
                   })}
                 </div>
 
-                <p className="mt-5 text-center text-xs text-white/25">
+                <p className="mt-5 text-center text-xs text-muted-foreground">
                   <Sparkles className="inline w-3 h-3 mr-1" />
                   Demo credentials are pre-filled. No real data is stored.
                 </p>
